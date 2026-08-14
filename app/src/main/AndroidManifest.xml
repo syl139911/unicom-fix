@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.junruo.jiankong">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -24,30 +23,30 @@
         android:theme="@style/Theme.Jiankong"
         >
         <activity android:name=".MainActivity"
-            ><!--android:excludeFromRecents="true"-->
+            android:exported="true"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!--<meta-data android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts" />-->
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".GetCookieActivity"/>
+        <activity android:name=".GetCookieActivity" android:exported="false"/>
         <activity android:name=".toumingActivity"
             android:excludeFromRecents="true"
+            android:exported="false"
             android:theme="@android:style/Theme.Translucent"/>
-        <service android:name=".server.FloatingImageDisplayService"></service>
-        <activity android:name=".payActivity"/>
+        <service android:name=".server.FloatingImageDisplayService" android:exported="false"/>
+        <activity android:name=".payActivity" android:exported="false"/>
 
         <service
             android:name=".server.NoticeBarToolService"
             android:icon="@drawable/logo"
             android:label="流量监控"
+            android:exported="false"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
