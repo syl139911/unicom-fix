@@ -2,15 +2,14 @@ plugins {
     id 'com.android.application'
 }
 
-
 android {
-    compileSdkVersion 30
-    buildToolsVersion '30.0.3'
+    namespace 'com.junruo.jiankong'
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "com.junruo.jiankong"
         minSdkVersion 19
-        targetSdkVersion 30
+        targetSdkVersion 33
         versionCode 8
         versionName '2.0'
 
@@ -28,22 +27,17 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-   /* viewBinding {
-        enabled = true
-    }*/
     buildFeatures{
         dataBinding = true
-        // for view binding :
-         viewBinding = true
+        viewBinding = true
     }
-    lintOptions {
+    lint {
         checkReleaseBuilds false
         abortOnError false
     }
 }
 
 dependencies {
-
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
@@ -52,13 +46,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     implementation 'com.alibaba:fastjson:1.2.73'
-
-
-
     implementation 'com.squareup.okhttp3:okhttp:3.9.0'
-    // okhttp3 网络请求模块
     implementation 'com.lzy.net:okhttputils:1.8.1'
     implementation 'com.github.medyo:fancybuttons:1.9.1'
-
-
 }
