@@ -6,8 +6,10 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
@@ -80,6 +82,29 @@ public class FloatingImageDisplayService extends Service {
 
     private String gao,kuan,xgao,xkuan;
 
+    // 通知栏按钮的广播接收器
+    private BroadcastReceiver refreshReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if ("com.junruo.jiankong.ACTION_RESET".equals(intent.getAction())) {
+                // 重置：清零所有数据，重新开始记录
+                mianliu = 0.00;
+                zong = 0.00;
+                yong = 0.00;
+                sheng = 0.00;
+                ben = 0.00;
+                tiao = 0.00;
+                onem = 0.00;
+                onet = 0.00;
+                orone = "yes";
+                update();
+            } else {
+                // 刷新
+                update();
+            }
+        }
+    };
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onCreate() {
@@ -135,7 +160,11 @@ public class FloatingImageDisplayService extends Service {
 
         zhe = displayView.findViewById(R.id.zhe);
 
-
+        // 注册刷新和重置广播
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("com.junruo.jiankong.ACTION_REFRESH");
+        filter.addAction("com.junruo.jiankong.ACTION_RESET");
+        registerReceiver(refreshReceiver, filter);
 
     }
 
@@ -175,6 +204,13 @@ public class FloatingImageDisplayService extends Service {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
                 .setContentIntent(pendingIntent)
+                // 添加"刷新"和"重置"按钮
+                .addAction(R.mipmap.ic_launcher, "刷新",
+                        PendingIntent.getBroadcast(this, 0,
+                                new Intent("com.junruo.jiankong.ACTION_REFRESH"), PendingIntent.FLAG_IMMUTABLE))
+                .addAction(R.mipmap.ic_launcher, "重置",
+                        PendingIntent.getBroadcast(this, 1,
+                                new Intent("com.junruo.jiankong.ACTION_RESET"), PendingIntent.FLAG_IMMUTABLE))
                 .build();
 
 
@@ -213,6 +249,7 @@ public class FloatingImageDisplayService extends Service {
         windowManager.removeView(displayView);
         handler.removeCallbacksAndMessages(null);
         isStarted = false;
+        unregisterReceiver(refreshReceiver);
         stopForeground(true);// 停止前台服务--参数：表示是否移除之前的通知
         // Service被终止的同时也停止定时器继续运行
         Toast.makeText(getApplicationContext(), "已关闭悬浮窗", Toast.LENGTH_SHORT).show();
@@ -304,76 +341,54 @@ public class FloatingImageDisplayService extends Service {
 
         try {
 
-            OkHttpUtils.post("https://m.client.10010.com/mobileservicequery/operationservice/queryOcsPackageFlowLeftContent")
+            OkHttpUtils.post("https://m.client.10010.com/servicequerybusiness/operationservice/queryOcsPackageFlowLeftContentRevisedInJune")
                     .headers("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
                     .headers("Cookie", cookie)
                     .execute(new StringCallback() {
                         @Override
                         public void onSuccess(String s, Call call, Response response) {
-                            if (s.equals("999999")||s.equals("")||s == null){
+                            // 1. null检查放最前面
+                            if (s == null || s.isEmpty() || s.equals("999999")){
                                 Toast.makeText(FloatingImageDisplayService.this,"解析cookie失败，请重新获取。",Toast.LENGTH_LONG).show();
                                 return;
                             }
+                            // 2. HTML检测
+                            if (!s.trim().startsWith("{")) {
+                                return;
+                            }
                             JSONObject json = JSONObject.parseObject(s);
+                            if (json == null) return;
                             System.out.println("=========================>成功");
                             //binding.packageName.setText(json.get("packageName").toString());
 
                             JSONObject summary = json.getJSONObject("summary");
 
-
-                            //summary.getString("sum");//本月已用
-                            mianliu = mianliu + Double.parseDouble(summary.getString("freeFlow"));//总免
+                            // 3. 免流量从details里取（summary.freeFlow现在返回0.00）
+                            mianliu = 0.00;
 
                             JSONArray jsonArray = json.getJSONArray("resources");
-
 
                             JSONObject job = jsonArray.getJSONObject(0);
 
                             JSONArray details = job.getJSONArray("details");
 
-
-
                             for (int i = 0; i < details.size(); i++) {
                                 JSONObject liuliang = details.getJSONObject(i);
-                                if (liuliang.getString("limited").equals("0")) {//套内流量包
-                                    if (liuliang.getString("addupItemCode") != null){
+                                String limited = liuliang.getString("limited");
+                                String addupItemCode = liuliang.getString("addupItemCode");
+                                String use = liuliang.getString("use");
 
-                                        if (!liuliang.getString("addupItemCode").equals("40008")){//通用流量包
-                                            String total = liuliang.getString("total");//流量包总量
-                                            String use = liuliang.getString("use");//流量包使用
-                                            String remain = liuliang.getString("remain");//流量包剩余
-
-                                            zong = zong + Double.parseDouble(total);
-                                            yong = yong + Double.parseDouble(use);
-                                            sheng = sheng + Double.parseDouble(remain);
-                                        }else {//定向流量包
-
-                                            String use = liuliang.getString("use");//流量包使用
-
-                                            //mianliu = mianliu + Double.parseDouble(use);
-
-                                        }
-
-                                    }else {
-                                        String total = liuliang.getString("total");//流量包总量
-                                        String use = liuliang.getString("use");//流量包使用
-                                        String remain = liuliang.getString("remain");//流量包剩余
-
-                                        zong = zong + Double.parseDouble(total);
-                                        yong = yong + Double.parseDouble(use);
-                                        sheng = sheng + Double.parseDouble(remain);
-                                    }
-
-
-                                    // dayin = dayin + "\n流量包名称：" + feePolicyName + "总量：" + total + "M，已使用：" + use + "M，剩余" + remain + "M\n";
-                                }else if (liuliang.getString("addUpItemName")==null||liuliang.getString("addupItemCode").equals("40008")){
-                                    String feePolicyName = liuliang.getString("feePolicyName");//免流包名称
-                                    String use = liuliang.getString("use");//已免流
-
-
-                                    ///mianliu = mianliu + Double.parseDouble(use);
+                                // 4. limited=="1" && addupItemCode=="40008" → 钉钉免流，累计
+                                if ("1".equals(limited) && "40008".equals(addupItemCode)) {
+                                    mianliu = mianliu + Double.parseDouble(use);
+                                } else if ("0".equals(limited)) {
+                                    // 通用流量
+                                    String total = liuliang.getString("total");
+                                    String remain = liuliang.getString("remain");
+                                    zong = zong + Double.parseDouble(total);
+                                    yong = yong + Double.parseDouble(use);
+                                    sheng = sheng + Double.parseDouble(remain);
                                 }
-
                             }
 
                             if (orone.equals("yes")){

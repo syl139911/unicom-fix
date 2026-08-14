@@ -359,84 +359,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    //版本更新检查
+    //版本更新检查 - 移除失效的第三方接口
     private void upupup() {
-
-        try {
-
-            OkHttpUtils.get("http://tool.chaoxing.zmorg.cn/api/appConfig.php?id=5&action=useConfig")
-                    .execute(new StringCallback() {
-                        @Override
-                        public void onSuccess(String s, Call call, Response response) {
-
-                            JSONObject json = JSONObject.parseObject(s);
-
-                            NewVersion = json.getString("version");
-                            versionmsg = json.getString("msg");
-                            getcookie = json.getString("getcookie");
-                            gonggao = json.getString("gonggao");
-                            notice = json.getString("notice");
-
-                            binding.notice.setText(notice);
-
-
-                            if (gonggao==null||gonggao.equals("")){
-                                gonggao = "很抱歉，你可能需要更新最新版才能看见最新的使用帮助，或者检查你的网络连接。请加群获取最新软件。QQ群：729376299";
-                            }
-
-
-                            // 创建SharedPreferences对象用于存储公告信息,并将其私有化
-                            SharedPreferences share = getSharedPreferences("gonggao",
-                                    Context.MODE_PRIVATE);
-                            // 获取编辑器来存储数据到sharedpreferences中
-                            SharedPreferences.Editor editor = share.edit();
-                            editor.putString("gonggao",gonggao);
-                            editor.putString("getcookie",getcookie);
-                            editor.commit();
-
-                            if (!oldVersion.equals(NewVersion)) {
-                                AlertDialog alertDialog2 = new AlertDialog.Builder(MainActivity.this)
-                                        .setTitle("有更新啦！")
-                                        .setMessage(versionmsg)
-                                        .setIcon(R.mipmap.ic_launcher)
-                                        .setPositiveButton("更新", new DialogInterface.OnClickListener() {//添加"Yes"按钮
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                String key = "QE-4bRJCa2w2Tu4lnWNuRBx4NqlIL8Op";
-                                                Intent intent = new Intent();
-                                                intent.setData(Uri.parse("mqqopensdkapi://bizAgent/qm/qr?url=http%3A%2F%2Fqm.qq.com%2Fcgi-bin%2Fqm%2Fqr%3Ffrom%3Dapp%26p%3Dandroid%26jump_from%3Dwebapi%26k%3D" + key));
-                                                // 此Flag可根据具体产品需要自定义，如设置，则在加群界面按返回，返回手Q主界面，不设置，按返回会返回到呼起产品界面    //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                try {
-                                                    startActivity(intent);
-                                                    toast("正在加群.....");
-                                                    return ;
-                                                } catch (Exception e) {
-                                                    // 未安装手Q或安装的版本不支持
-                                                    toast("未安装手Q或安装的版本不支持.");
-                                                    return ;
-                                                }
-
-
-                                            }
-                                        })
-
-                                        .setNegativeButton("待会更新", new DialogInterface.OnClickListener() {//添加取消
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                            }
-                                        })
-                                        .create();
-                                alertDialog2.show();
-
-                            }
-                        }
-                    });
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
+        gonggao = "本软件永久免费，请加群获取最新版本。QQ群：914950367";
+        notice = "";
+        // 获取Cookie的地址改为联通官方登录页
+        getcookie = "https://m.client.10010.com/";
+        SharedPreferences share = getSharedPreferences("gonggao", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = share.edit();
+        editor.putString("gonggao", gonggao);
+        editor.putString("getcookie", getcookie);
+        editor.commit();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -528,7 +461,7 @@ public class MainActivity extends AppCompatActivity {
         binding.sj.setText(sj.format(day));
 
         try {
-            OkHttpUtils.post("https://m.client.10010.com/mobileservicequery/operationservice/queryOcsPackageFlowLeftContent")
+            OkHttpUtils.post("https://m.client.10010.com/servicequerybusiness/operationservice/queryOcsPackageFlowLeftContentRevisedInJune")
                     .headers("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
                     .headers("Cookie", cookie)
                     .execute(new StringCallback() {
@@ -541,23 +474,36 @@ public class MainActivity extends AppCompatActivity {
                         @SuppressLint("LongLogTag")
                         @Override
                         public void onSuccess(String s, Call call, Response response) {
-                            toast("正在解析");
                             System.out.println(s);
-                            if (s.equals("999999")||s.equals("")||s == null){
+                            // 1. null检查放最前面
+                            if (s == null || s.isEmpty() || s.equals("999999")){
                                 toast("失败，请重新获取cookie");
                                 return;
                             }
+                            // 2. HTML检测
+                            if (!s.trim().startsWith("{")) {
+                                toast("服务器异常，请稍后再试");
+                                return;
+                            }
+                            toast("正在解析");
                             JSONObject json = JSONObject.parseObject(s);
+                            if (json == null) {
+                                toast("返回数据为空");
+                                return;
+                            }
 
-                            binding.packageName.setText(json.get("packageName").toString());
+                            Object pkgName = json.get("packageName");
+                            if (pkgName != null) {
+                                binding.packageName.setText(pkgName.toString());
+                            } else {
+                                binding.packageName.setText("未知套餐");
+                            }
 
-
-                            JSONObject summary = json.getJSONObject("summary");
-
-
-                            mianliu = Double.parseDouble(summary.getString("freeFlow"));//总免
-                            yong = Double.parseDouble(summary.getString("sum")) - mianliu;//本月已用
-
+                            // 3. 免流量从details里取（summary.freeFlow现在返回0.00）
+                            mianliu = 0.00;
+                            yong = 0.00;
+                            zong = 0.00;
+                            sheng = 0.00;
 
                             JSONArray jsonArray = json.getJSONArray("resources");
 
@@ -565,38 +511,25 @@ public class MainActivity extends AppCompatActivity {
 
                             JSONArray details = job.getJSONArray("details");
 
-
                             for (int i = 0; i < details.size(); i++) {
                                 JSONObject liuliang = details.getJSONObject(i);
-                                if (liuliang.getString("limited").equals("0")) {//套内流量包
-                                    if (liuliang.getString("addupItemCode") != null){
+                                String limited = liuliang.getString("limited");
+                                String addupItemCode = liuliang.getString("addupItemCode");
+                                String use = liuliang.getString("use");
 
-                                        if (!liuliang.getString("addupItemCode").equals("40008")){//通用流量包
-                                            String feePolicyName = liuliang.getString("feePolicyName");//流量包名称
-                                            String total = liuliang.getString("total");//流量包总量
-                                            String use = liuliang.getString("use");//流量包使用
-                                            String remain = liuliang.getString("remain");//流量包剩余
-
-                                            zong = zong + Double.parseDouble(total);
-                                            //yong = yong + Double.parseDouble(use);
-                                            sheng = sheng + Double.parseDouble(remain);
-
-                                            dayin = dayin + "\n通用包名称：" + feePolicyName + "总量：" + total + "M，已使用：" + use + "M，剩余" + remain + "M\n";
-                                        }else {//定向流量包
-                                            String feePolicyName = liuliang.getString("feePolicyName");//流量包名称
-                                            String total = liuliang.getString("total");//流量包总量
-                                            String use = liuliang.getString("use");//流量包使用
-                                            String remain = liuliang.getString("remain");//流量包剩余
-
-                                            dingz = dingz + Double.parseDouble(total);
-                                            dingy = dingy + Double.parseDouble(use);
-                                            dings = dings + Double.parseDouble(remain);
-
-
-                                            //mianliu = mianliu + Double.parseDouble(use);
-
-                                            dayin = dayin + "\n定向包名称：" + feePolicyName + "总量：" + total + "M，已使用：" + use + "M，剩余" + remain + "M\n";
-                                        }
+                                // 4. limited=="1" && addupItemCode=="40008" → 钉钉免流
+                                if ("1".equals(limited) && "40008".equals(addupItemCode)) {
+                                    mianliu = mianliu + Double.parseDouble(use);
+                                    dayin = dayin + "\n免流包：" + liuliang.getString("feePolicyName") + " 已用：" + use + "M\n";
+                                } else if ("0".equals(limited)) {
+                                    String total = liuliang.getString("total");
+                                    String remain = liuliang.getString("remain");
+                                    zong = zong + Double.parseDouble(total);
+                                    yong = yong + Double.parseDouble(use);
+                                    sheng = sheng + Double.parseDouble(remain);
+                                    dayin = dayin + "\n通用包：" + liuliang.getString("feePolicyName") + " 总量：" + total + "M，已用：" + use + "M，剩余：" + remain + "M\n";
+                                }
+                            }
 
                                     }else {
 
@@ -610,17 +543,6 @@ public class MainActivity extends AppCompatActivity {
                                         sheng = sheng + Double.parseDouble(remain);
 
                                         dayin = dayin + "\n通用包名称：" + feePolicyName + "总量：" + total + "M，已使用：" + use + "M，剩余" + remain + "M\n";
-
-                                    }
-
-                                }else if (liuliang.getString("addUpItemName")==null||liuliang.getString("addupItemCode").equals("40008")){
-                                    String feePolicyName = liuliang.getString("feePolicyName");//免流包名称
-                                    String use = liuliang.getString("use");//已免流
-
-
-                                    //mianliu = mianliu + Double.parseDouble(use);
-                                    dayin = dayin + "\n免流包名称：" + feePolicyName +"已使用：" + use + "M\n";
-                                }
 
                             }
 
