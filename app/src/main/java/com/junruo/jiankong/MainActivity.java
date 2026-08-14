@@ -515,21 +515,49 @@ public class MainActivity extends AppCompatActivity {
                                 JSONObject liuliang = details.getJSONObject(i);
                                 String limited = liuliang.getString("limited");
                                 String addupItemCode = liuliang.getString("addupItemCode");
-                                String use = liuliang.getString("use");
 
-                                // 4. limited=="1" && addupItemCode=="40008" → 钉钉免流
-                                if ("1".equals(limited) && "40008".equals(addupItemCode)) {
+                                if ("0".equals(limited)) {//套内流量包
+                                    if (addupItemCode != null) {
+                                        if (!"40008".equals(addupItemCode)) {//通用流量包
+                                            String feePolicyName = liuliang.getString("feePolicyName");
+                                            String total = liuliang.getString("total");
+                                            String use = liuliang.getString("use");
+                                            String remain = liuliang.getString("remain");
+
+                                            zong = zong + Double.parseDouble(total);
+                                            sheng = sheng + Double.parseDouble(remain);
+
+                                            dayin = dayin + "\n通用包名称：" + feePolicyName + " 总量：" + total + "M，已使用：" + use + "M，剩余：" + remain + "M\n";
+                                        } else {//定向流量包
+                                            String feePolicyName = liuliang.getString("feePolicyName");
+                                            String total = liuliang.getString("total");
+                                            String use = liuliang.getString("use");
+                                            String remain = liuliang.getString("remain");
+
+                                            dingz = dingz + Double.parseDouble(total);
+                                            dingy = dingy + Double.parseDouble(use);
+                                            dings = dings + Double.parseDouble(remain);
+
+                                            dayin = dayin + "\n定向包名称：" + feePolicyName + " 总量：" + total + "M，已使用：" + use + "M，剩余：" + remain + "M\n";
+                                        }
+                                    } else {
+                                        String feePolicyName = liuliang.getString("feePolicyName");
+                                        String total = liuliang.getString("total");
+                                        String use = liuliang.getString("use");
+                                        String remain = liuliang.getString("remain");
+
+                                        zong = zong + Double.parseDouble(total);
+                                        sheng = sheng + Double.parseDouble(remain);
+
+                                        dayin = dayin + "\n通用包名称：" + feePolicyName + " 总量：" + total + "M，已使用：" + use + "M，剩余：" + remain + "M\n";
+                                    }
+                                } else if ("1".equals(limited) && "40008".equals(addupItemCode)) {//免流包
+                                    String feePolicyName = liuliang.getString("feePolicyName");
+                                    String use = liuliang.getString("use");
+
                                     mianliu = mianliu + Double.parseDouble(use);
-                                    dayin = dayin + "\n免流包：" + liuliang.getString("feePolicyName") + " 已用：" + use + "M\n";
-                                } else if ("0".equals(limited)) {
-                                    String total = liuliang.getString("total");
-                                    String remain = liuliang.getString("remain");
-                                    zong = zong + Double.parseDouble(total);
-                                    yong = yong + Double.parseDouble(use);
-                                    sheng = sheng + Double.parseDouble(remain);
-                                    dayin = dayin + "\n通用包：" + liuliang.getString("feePolicyName") + " 总量：" + total + "M，已用：" + use + "M，剩余：" + remain + "M\n";
+                                    dayin = dayin + "\n免流包名称：" + feePolicyName + " 已使用：" + use + "M\n";
                                 }
-                            }
 
                             }
 
