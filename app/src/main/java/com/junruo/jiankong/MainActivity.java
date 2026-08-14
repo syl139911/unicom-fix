@@ -531,19 +531,6 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
 
-                                    }else {
-
-                                        String feePolicyName = liuliang.getString("feePolicyName");//流量包名称
-                                        String total = liuliang.getString("total");//流量包总量
-                                        String use = liuliang.getString("use");//流量包使用
-                                        String remain = liuliang.getString("remain");//流量包剩余
-
-                                        zong = zong + Double.parseDouble(total);
-                                        //yong = yong + Double.parseDouble(use);
-                                        sheng = sheng + Double.parseDouble(remain);
-
-                                        dayin = dayin + "\n通用包名称：" + feePolicyName + "总量：" + total + "M，已使用：" + use + "M，剩余" + remain + "M\n";
-
                             }
 
                             if (orone.equals("yes")){
