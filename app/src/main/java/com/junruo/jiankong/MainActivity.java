@@ -499,66 +499,100 @@ public class MainActivity extends AppCompatActivity {
                                 binding.packageName.setText("未知套餐");
                             }
 
-                            // 3. 免流量从details里取（summary.freeFlow现在返回0.00）
+                            // 3. 解析 resources（套内流量）
                             mianliu = 0.00;
                             yong = 0.00;
                             zong = 0.00;
                             sheng = 0.00;
 
                             JSONArray jsonArray = json.getJSONArray("resources");
-
                             JSONObject job = jsonArray.getJSONObject(0);
-
                             JSONArray details = job.getJSONArray("details");
 
                             for (int i = 0; i < details.size(); i++) {
                                 JSONObject liuliang = details.getJSONObject(i);
                                 String limited = liuliang.getString("limited");
                                 String addupItemCode = liuliang.getString("addupItemCode");
+                                String use = liuliang.getString("use");
+                                String feePolicyName = liuliang.getString("feePolicyName");
 
-                                if ("0".equals(limited)) {//套内流量包
-                                    if (addupItemCode != null) {
-                                        if (!"40008".equals(addupItemCode)) {//通用流量包
-                                            String feePolicyName = liuliang.getString("feePolicyName");
-                                            String total = liuliang.getString("total");
-                                            String use = liuliang.getString("use");
-                                            String remain = liuliang.getString("remain");
-
-                                            zong = zong + Double.parseDouble(total);
-                                            sheng = sheng + Double.parseDouble(remain);
-
-                                            dayin = dayin + "\n通用包名称：" + feePolicyName + " 总量：" + total + "M，已使用：" + use + "M，剩余：" + remain + "M\n";
-                                        } else {//定向流量包
-                                            String feePolicyName = liuliang.getString("feePolicyName");
-                                            String total = liuliang.getString("total");
-                                            String use = liuliang.getString("use");
-                                            String remain = liuliang.getString("remain");
-
-                                            dingz = dingz + Double.parseDouble(total);
-                                            dingy = dingy + Double.parseDouble(use);
-                                            dings = dings + Double.parseDouble(remain);
-
-                                            dayin = dayin + "\n定向包名称：" + feePolicyName + " 总量：" + total + "M，已使用：" + use + "M，剩余：" + remain + "M\n";
-                                        }
-                                    } else {
-                                        String feePolicyName = liuliang.getString("feePolicyName");
-                                        String total = liuliang.getString("total");
-                                        String use = liuliang.getString("use");
-                                        String remain = liuliang.getString("remain");
-
-                                        zong = zong + Double.parseDouble(total);
-                                        sheng = sheng + Double.parseDouble(remain);
-
-                                        dayin = dayin + "\n通用包名称：" + feePolicyName + " 总量：" + total + "M，已使用：" + use + "M，剩余：" + remain + "M\n";
-                                    }
-                                } else if ("1".equals(limited) && "40008".equals(addupItemCode)) {//免流包
-                                    String feePolicyName = liuliang.getString("feePolicyName");
-                                    String use = liuliang.getString("use");
-
+                                if ("1".equals(limited) && "40008".equals(addupItemCode)) {
+                                    // 免流包（钉钉定向等）
                                     mianliu = mianliu + Double.parseDouble(use);
-                                    dayin = dayin + "\n免流包名称：" + feePolicyName + " 已使用：" + use + "M\n";
-                                }
+                                    dayin = dayin + "\n免流包：" + feePolicyName + " 已使用：" + use + "M\n";
+                                } else if ("0".equals(limited)) {
+                                    // 套内流量包
+                                    String total = liuliang.getString("total");
+                                    String remain = liuliang.getString("remain");
 
+                                    if ("40008".equals(addupItemCode)) {
+                                        // 定向流量包（专享）
+                                        dingz = dingz + Double.parseDouble(total);
+                                        dingy = dingy + Double.parseDouble(use);
+                                        dings = dings + Double.parseDouble(remain);
+                                        dayin = dayin + "\n定向包：" + feePolicyName + " 总量：" + total + "M，已用：" + use + "M，剩余：" + remain + "M\n";
+                                    } else {
+                                        // 通用流量包
+                                        zong = zong + Double.parseDouble(total);
+                                        yong = yong + Double.parseDouble(use);
+                                        sheng = sheng + Double.parseDouble(remain);
+                                        dayin = dayin + "\n通用包：" + feePolicyName + " 总量：" + total + "M，已用：" + use + "M，剩余：" + remain + "M\n";
+                                    }
+                                }
+                            }
+
+                            // 4. 解析 MlResources（新版接口新增的免流明细）
+                            JSONArray mlArray = json.getJSONArray("MlResources");
+                            if (mlArray != null) {
+                                for (int i = 0; i < mlArray.size(); i++) {
+                                    JSONObject mlRes = mlArray.getJSONObject(i);
+                                    JSONArray mlDetails = mlRes.getJSONArray("details");
+                                    if (mlDetails != null) {
+                                        for (int j = 0; j < mlDetails.size(); j++) {
+                                            JSONObject ml = mlDetails.getJSONObject(j);
+                                            String mlUse = ml.getString("use");
+                                            String mlName = ml.getString("feePolicyName");
+                                            if (mlUse != null && !mlUse.equals("0.00")) {
+                                                mianliu = mianliu + Double.parseDouble(mlUse);
+                                                dayin = dayin + "\n其他免流：" + mlName + " 已用：" + mlUse + "M\n";
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 5. 解析 unshared（专享流量包，如联通云盘）
+                            JSONArray unsharedArray = json.getJSONArray("unshared");
+                            if (unsharedArray != null) {
+                                for (int i = 0; i < unsharedArray.size(); i++) {
+                                    JSONObject us = unsharedArray.getJSONObject(i);
+                                    String usType = us.getString("type");
+                                    if ("unsharedFlowList".equals(usType)) {
+                                        JSONArray usDetails = us.getJSONArray("details");
+                                        if (usDetails != null) {
+                                            for (int j = 0; j < usDetails.size(); j++) {
+                                                JSONObject ud = usDetails.getJSONObject(j);
+                                                String usTotal = ud.getString("total");
+                                                String usUse = ud.getString("use");
+                                                String usRemain = ud.getString("remain");
+                                                String usName = ud.getString("feePolicyName");
+                                                String usLimited = ud.getString("limited");
+
+                                                if ("0".equals(usLimited)) {
+                                                    // 专享通用包（如联通云盘）
+                                                    dingz = dingz + Double.parseDouble(usTotal);
+                                                    dingy = dingy + Double.parseDouble(usUse);
+                                                    dings = dings + Double.parseDouble(usRemain);
+                                                    dayin = dayin + "\n专享包：" + usName + " 总量：" + usTotal + "M，已用：" + usUse + "M，剩余：" + usRemain + "M\n";
+                                                } else {
+                                                    // 专享免流包
+                                                    mianliu = mianliu + Double.parseDouble(usUse);
+                                                    dayin = dayin + "\n专享免流：" + usName + " 已用：" + usUse + "M\n";
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             if (orone.equals("yes")){

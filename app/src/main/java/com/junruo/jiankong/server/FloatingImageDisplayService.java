@@ -62,6 +62,10 @@ public class FloatingImageDisplayService extends Service {
     private Double ben = 0.00;//本次免流
     private Double tiao = 0.00;//本次消耗
 
+    private Double dingz = 0.00;//定向总量
+    private Double dingy = 0.00;//定向已用
+    private Double dings = 0.00;//定向剩余
+
 
     private String orone = "yes";//是否首次获取
 
@@ -92,6 +96,9 @@ public class FloatingImageDisplayService extends Service {
                 zong = 0.00;
                 yong = 0.00;
                 sheng = 0.00;
+                dingz = 0.00;
+                dingy = 0.00;
+                dings = 0.00;
                 ben = 0.00;
                 tiao = 0.00;
                 onem = 0.00;
@@ -333,6 +340,9 @@ public class FloatingImageDisplayService extends Service {
         zong=0.00;//套餐总量
         yong=0.00;//套餐已用
         sheng =0.00;//剩余流量
+        dingz=0.00;//定向总量
+        dingy=0.00;//定向已用
+        dings=0.00;//定向剩余
 
         DecimalFormat df = new DecimalFormat("0.000");
         Date day=new Date();
@@ -363,13 +373,14 @@ public class FloatingImageDisplayService extends Service {
 
                             JSONObject summary = json.getJSONObject("summary");
 
-                            // 3. 免流量从details里取（summary.freeFlow现在返回0.00）
+                            // 3. 解析 resources（套内流量）
                             mianliu = 0.00;
+                            yong = 0.00;
+                            zong = 0.00;
+                            sheng = 0.00;
 
                             JSONArray jsonArray = json.getJSONArray("resources");
-
                             JSONObject job = jsonArray.getJSONObject(0);
-
                             JSONArray details = job.getJSONArray("details");
 
                             for (int i = 0; i < details.size(); i++) {
@@ -378,16 +389,71 @@ public class FloatingImageDisplayService extends Service {
                                 String addupItemCode = liuliang.getString("addupItemCode");
                                 String use = liuliang.getString("use");
 
-                                // 4. limited=="1" && addupItemCode=="40008" → 钉钉免流，累计
                                 if ("1".equals(limited) && "40008".equals(addupItemCode)) {
+                                    // 免流包（钉钉定向等）
                                     mianliu = mianliu + Double.parseDouble(use);
                                 } else if ("0".equals(limited)) {
-                                    // 通用流量
                                     String total = liuliang.getString("total");
                                     String remain = liuliang.getString("remain");
-                                    zong = zong + Double.parseDouble(total);
-                                    yong = yong + Double.parseDouble(use);
-                                    sheng = sheng + Double.parseDouble(remain);
+
+                                    if ("40008".equals(addupItemCode)) {
+                                        // 定向/专享流量包
+                                        dingz = dingz + Double.parseDouble(total);
+                                        dingy = dingy + Double.parseDouble(use);
+                                        dings = dings + Double.parseDouble(remain);
+                                    } else {
+                                        // 通用流量包
+                                        zong = zong + Double.parseDouble(total);
+                                        yong = yong + Double.parseDouble(use);
+                                        sheng = sheng + Double.parseDouble(remain);
+                                    }
+                                }
+                            }
+
+                            // 4. 解析 MlResources（新版接口新增的免流明细）
+                            JSONArray mlArray = json.getJSONArray("MlResources");
+                            if (mlArray != null) {
+                                for (int i = 0; i < mlArray.size(); i++) {
+                                    JSONObject mlRes = mlArray.getJSONObject(i);
+                                    JSONArray mlDetails = mlRes.getJSONArray("details");
+                                    if (mlDetails != null) {
+                                        for (int j = 0; j < mlDetails.size(); j++) {
+                                            JSONObject ml = mlDetails.getJSONObject(j);
+                                            String mlUse = ml.getString("use");
+                                            if (mlUse != null && !mlUse.equals("0.00")) {
+                                                mianliu = mianliu + Double.parseDouble(mlUse);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 5. 解析 unshared（专享流量包，如联通云盘）
+                            JSONArray unsharedArray = json.getJSONArray("unshared");
+                            if (unsharedArray != null) {
+                                for (int i = 0; i < unsharedArray.size(); i++) {
+                                    JSONObject us = unsharedArray.getJSONObject(i);
+                                    String usType = us.getString("type");
+                                    if ("unsharedFlowList".equals(usType)) {
+                                        JSONArray usDetails = us.getJSONArray("details");
+                                        if (usDetails != null) {
+                                            for (int j = 0; j < usDetails.size(); j++) {
+                                                JSONObject ud = usDetails.getJSONObject(j);
+                                                String usTotal = ud.getString("total");
+                                                String usUse = ud.getString("use");
+                                                String usRemain = ud.getString("remain");
+                                                String usLimited = ud.getString("limited");
+
+                                                if ("0".equals(usLimited)) {
+                                                    dingz = dingz + Double.parseDouble(usTotal);
+                                                    dingy = dingy + Double.parseDouble(usUse);
+                                                    dings = dings + Double.parseDouble(usRemain);
+                                                } else {
+                                                    mianliu = mianliu + Double.parseDouble(usUse);
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
