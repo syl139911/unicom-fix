@@ -513,12 +513,14 @@ public class FloatingImageDisplayService extends Service {
                                 onet = yong;
                                 onem = mianliu;
                                 orone="no";
-                                // 创建SharedPreferences对象用于存储Cookie信息,并将其私有化
+                                // 保存起始值到SharedPreferences，供主界面同步
                                 SharedPreferences share = getSharedPreferences("Cookie",
                                         Context.MODE_PRIVATE);
-                                // 获取编辑器来存储数据到sharedpreferences中
                                 SharedPreferences.Editor editor = share.edit();
                                 editor.putString("Cookie",cookie);
+                                editor.putFloat("onem", onem.floatValue());
+                                editor.putFloat("onet", onet.floatValue());
+                                editor.putLong("onem_time", System.currentTimeMillis());
                                 editor.commit();
                             }else {
                             }

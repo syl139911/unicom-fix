@@ -620,13 +620,18 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             if (orone.equals("yes")){
-                                onet = yong;
-                                onem = mianliu;
+                                // 先检查悬浮窗是否已经保存了起始值
+                                SharedPreferences share = getSharedPreferences("Cookie", Context.MODE_PRIVATE);
+                                long savedTime = share.getLong("onem_time", 0);
+                                // 10分钟内的起始值有效，直接用
+                                if (savedTime > 0 && System.currentTimeMillis() - savedTime < 600000) {
+                                    onet = (double) share.getFloat("onet", 0f);
+                                    onem = (double) share.getFloat("onem", 0f);
+                                } else {
+                                    onet = yong;
+                                    onem = mianliu;
+                                }
                                 orone="no";
-                                // 创建SharedPreferences对象用于存储Cookie信息,并将其私有化
-                                SharedPreferences share = getSharedPreferences("Cookie",
-                                        Context.MODE_PRIVATE);
-                                // 获取编辑器来存储数据到sharedpreferences中
                                 SharedPreferences.Editor editor = share.edit();
                                 editor.putString("Cookie",cookie);
                                 editor.commit();
