@@ -39,7 +39,9 @@
             android:excludeFromRecents="true"
             android:exported="false"
             android:theme="@android:style/Theme.Translucent"/>
-        <service android:name=".server.FloatingImageDisplayService" android:exported="false"/>
+        <service android:name=".server.FloatingImageDisplayService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"/>
         <activity android:name=".payActivity" android:exported="false"/>
 
         <service
