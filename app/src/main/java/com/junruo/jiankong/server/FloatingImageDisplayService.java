@@ -397,8 +397,6 @@ public class FloatingImageDisplayService extends Service {
                             System.out.println("=========================>成功");
                             //binding.packageName.setText(json.get("packageName").toString());
 
-                            JSONObject summary = json.getJSONObject("summary");
-
                             // 3. 解析 resources（套内流量）
                             mianliu = 0.00;
                             yong = 0.00;
