@@ -105,6 +105,9 @@ public class FloatingImageDisplayService extends Service {
                 onem = 0.00;
                 onet = 0.00;
                 orone = "yes";
+                // 清除SharedPreferences里的起始值
+                SharedPreferences sp = getSharedPreferences("Cookie", Context.MODE_PRIVATE);
+                sp.edit().remove("onem").remove("onet").remove("onem_time").commit();
                 update();
             } else {
                 // 刷新
@@ -189,6 +192,8 @@ public class FloatingImageDisplayService extends Service {
             onem = 0.00;
             onet = 0.00;
             orone = "yes";
+            SharedPreferences sp = getSharedPreferences("Cookie", Context.MODE_PRIVATE);
+            sp.edit().remove("onem").remove("onet").remove("onem_time").commit();
             update();
             Toast.makeText(getApplicationContext(), "已重置", Toast.LENGTH_SHORT).show();
         });
