@@ -81,6 +81,7 @@ public class FloatingImageDisplayService extends Service {
 
 
     TextView miantv,zongtv,yongtv,shengtv,bentv,tiaotv,sjtv,miant,zongt,yongt,shengt,sjt;
+    TextView btnRefresh, btnReset;
 
     LinearLayout zhe;
 
@@ -166,6 +167,31 @@ public class FloatingImageDisplayService extends Service {
         sjt = displayView.findViewById(R.id.sjt);
 
         zhe = displayView.findViewById(R.id.zhe);
+
+        btnRefresh = displayView.findViewById(R.id.btn_refresh);
+        btnReset = displayView.findViewById(R.id.btn_reset);
+
+        btnRefresh.setOnClickListener(v -> {
+            update();
+            Toast.makeText(getApplicationContext(), "已刷新", Toast.LENGTH_SHORT).show();
+        });
+
+        btnReset.setOnClickListener(v -> {
+            mianliu = 0.00;
+            zong = 0.00;
+            yong = 0.00;
+            sheng = 0.00;
+            dingz = 0.00;
+            dingy = 0.00;
+            dings = 0.00;
+            ben = 0.00;
+            tiao = 0.00;
+            onem = 0.00;
+            onet = 0.00;
+            orone = "yes";
+            update();
+            Toast.makeText(getApplicationContext(), "已重置", Toast.LENGTH_SHORT).show();
+        });
 
         // 注册刷新和重置广播
         IntentFilter filter = new IntentFilter();
