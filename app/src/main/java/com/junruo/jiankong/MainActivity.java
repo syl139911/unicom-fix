@@ -202,6 +202,10 @@ public class MainActivity extends AppCompatActivity {
         binding.xkuan.setText(xkuan);
         binding.xgao.setText(xgao);
 
+        // 有cookie时自动加载数据
+        if (cookie != null && !cookie.isEmpty()) {
+            update();
+        }
 
         OnClick();
 
