@@ -507,14 +507,7 @@ public class FloatingImageDisplayService extends Service {
                             dings = 0.00;
 
                             try {
-                                // 先尝试从 summary 取总免（旧接口兼容）
-                                JSONObject summary = json.getJSONObject("summary");
-                                if (summary != null) {
-                                    String freeFlow = summary.getString("freeFlow");
-                                    if (freeFlow != null && !freeFlow.isEmpty() && !freeFlow.equals("0") && !freeFlow.equals("0.00")) {
-                                        mianliu = Double.parseDouble(freeFlow);
-                                    }
-                                }
+                                // 总免从定向包 use 累加（summary.freeFlow 已弃用）
 
                                 // resources（套内流量，可能多张卡）
                                 JSONArray jsonArray = json.getJSONArray("resources");
@@ -543,9 +536,11 @@ public class FloatingImageDisplayService extends Service {
                                                     dingz = dingz + totalVal;
                                                     dingy = dingy + Double.parseDouble(use);
                                                     dings = totalVal == 0 ? dings : dings + safeDouble(remain);
-                                                    if (mianliu == 0.00) mianliu = mianliu + Double.parseDouble(use); // summary无值时，定向已用计入总免
+                                                    mianliu = mianliu + Double.parseDouble(use); // 定向已用计入总免
                                                 } else if ("0".equals(limited)) {
-                                                    // 通用包
+                                                    // 通用包（只算流量，排除语音和短信）
+                                                    String flowType = liuliang.getString("flowType");
+                                                    if (flowType == null || (!flowType.equals("1") && !flowType.equals("2"))) continue;
                                                     if (total == null || remain == null) continue;
                                                     zong = zong + Double.parseDouble(total);
                                                     yong = yong + Double.parseDouble(use);
