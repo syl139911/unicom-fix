@@ -491,8 +491,11 @@ public class FloatingImageDisplayService extends Service {
                                 if (jsonArray != null) {
                                     for (int j = 0; j < jsonArray.size(); j++) {
                                     JSONObject job = jsonArray.getJSONObject(j);
+                                    String cardType = job.getString("type");
+                                    // 只处理流量卡，跳过语音卡、短信卡
+                                    if (cardType != null && !cardType.equals("flow")) continue;
                                     String cardName = job.getString("packageName");
-                                    System.out.println("卡" + j + ": " + cardName);
+                                    System.out.println("卡" + j + ": " + cardName + " type=" + cardType);
                                     JSONArray details = job.getJSONArray("details");
                                     if (details != null) {
                                         for (int i = 0; i < details.size(); i++) {
