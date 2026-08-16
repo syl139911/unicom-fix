@@ -7,17 +7,25 @@ import androidx.core.app.ActivityCompat;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.widget.CompoundButton;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.Icon;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -67,6 +75,24 @@ public class MainActivity extends AppCompatActivity {
 
     private String cookie = "";//储存cookie信息
 
+    // 网络恢复自动刷新
+    private BroadcastReceiver networkReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(android.content.Context context, Intent intent) {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
+            if (cm != null) {
+                NetworkCapabilities nc = cm.getNetworkCapabilities(cm.getActiveNetwork());
+                if (nc != null && (nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                        || nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                        || nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))) {
+                    if (cookie != null && !cookie.isEmpty()) {
+                        update();
+                    }
+                }
+            }
+        }
+    };
+
     private String versionName = "";
     private int versioncode;
     private String oldVersion ;
@@ -106,6 +132,25 @@ public class MainActivity extends AppCompatActivity {
         //获取读写外部存储权限
         verifyStoragePermissions(this);
 
+        // Android 13+ 请求通知权限
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1001);
+            }
+        }
+
+        // 注册网络恢复广播
+        IntentFilter netFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkReceiver, netFilter, Context.RECEIVER_NOT_EXPORTED);
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        try {
+            unregisterReceiver(networkReceiver);
+        } catch (Exception ignored) {}
     }
 
     //申请读写权限
@@ -202,14 +247,120 @@ public class MainActivity extends AppCompatActivity {
         binding.xkuan.setText(xkuan);
         binding.xgao.setText(xgao);
 
+        // 加载悬浮窗显示项目设置（默认全显示）
+        binding.cbMian.setChecked(share.getBoolean("show_mian", true));
+        binding.cbZong.setChecked(share.getBoolean("show_zong", true));
+        binding.cbYong.setChecked(share.getBoolean("show_yong", true));
+        binding.cbSheng.setChecked(share.getBoolean("show_sheng", true));
+        binding.cbBen.setChecked(share.getBoolean("show_ben", true));
+        binding.cbTiao.setChecked(share.getBoolean("show_tiao", true));
+
         // 有cookie时自动加载数据
         if (cookie != null && !cookie.isEmpty()) {
             update();
         }
 
         OnClick();
+        setupDisplayCheckboxes();
 
+    }
 
+    private void setupDisplayCheckboxes() {
+        CompoundButton.OnCheckedChangeListener listener = (buttonView, isChecked) -> {
+            SharedPreferences sp = getSharedPreferences("Cookie", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sp.edit();
+            editor.putBoolean("show_mian", binding.cbMian.isChecked());
+            editor.putBoolean("show_zong", binding.cbZong.isChecked());
+            editor.putBoolean("show_yong", binding.cbYong.isChecked());
+            editor.putBoolean("show_sheng", binding.cbSheng.isChecked());
+            editor.putBoolean("show_ben", binding.cbBen.isChecked());
+            editor.putBoolean("show_tiao", binding.cbTiao.isChecked());
+            editor.commit();
+            // 通知悬浮窗服务刷新显示
+            sendBroadcast(new Intent("com.junruo.jiankong.ACTION_UPDATE_DISPLAY"));
+        };
+        binding.cbMian.setOnCheckedChangeListener(listener);
+        binding.cbZong.setOnCheckedChangeListener(listener);
+        binding.cbYong.setOnCheckedChangeListener(listener);
+        binding.cbSheng.setOnCheckedChangeListener(listener);
+        binding.cbBen.setOnCheckedChangeListener(listener);
+        binding.cbTiao.setOnCheckedChangeListener(listener);
+
+        setupColorPickers();
+    }
+
+    // 预设颜色列表
+    private static final int[] PRESET_COLORS = {
+            Color.parseColor("#FFFFFF"), // 白
+            Color.parseColor("#E6E6E6"), // 浅灰
+            Color.parseColor("#4FC3F7"), // 天蓝
+            Color.parseColor("#81C784"), // 浅绿
+            Color.parseColor("#FFD54F"), // 金黄
+            Color.parseColor("#FF8A65"), // 橘红
+            Color.parseColor("#E57373"), // 红
+            Color.parseColor("#BA68C8"), // 紫
+            Color.parseColor("#FF69B4"), // 粉
+            Color.parseColor("#00E5FF"), // 青
+    };
+
+    private void setupColorPickers() {
+        SharedPreferences sp = getSharedPreferences("Cookie", Context.MODE_PRIVATE);
+
+        // 加载保存的颜色
+        int labelColor = sp.getInt("color_label", Color.parseColor("#E6E6E6"));
+        int valueColor = sp.getInt("color_value", Color.WHITE);
+        int btnColor = sp.getInt("color_btn", Color.parseColor("#4FC3F7"));
+
+        binding.colorLabel.setBackgroundColor(labelColor);
+        binding.colorValue.setBackgroundColor(valueColor);
+        binding.colorBtn.setBackgroundColor(btnColor);
+
+        binding.colorLabel.setOnClickListener(v -> showColorPicker("color_label", binding.colorLabel));
+        binding.colorValue.setOnClickListener(v -> showColorPicker("color_value", binding.colorValue));
+        binding.colorBtn.setOnClickListener(v -> showColorPicker("color_btn", binding.colorBtn));
+    }
+
+    private void showColorPicker(String prefKey, View target) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("选择颜色");
+
+        // 创建颜色网格
+        android.widget.GridView gridView = new android.widget.GridView(this);
+        gridView.setNumColumns(5);
+        gridView.setAdapter(new android.widget.BaseAdapter() {
+            @Override
+            public int getCount() { return PRESET_COLORS.length; }
+            @Override
+            public Object getItem(int position) { return PRESET_COLORS[position]; }
+            @Override
+            public long getItemId(int position) { return position; }
+            @Override
+            public View getView(int position, View convertView, android.view.ViewGroup parent) {
+                View colorView = new View(MainActivity.this);
+                colorView.setLayoutParams(new android.widget.AbsListView.LayoutParams(80, 80));
+                GradientDrawable bg = new GradientDrawable();
+                bg.setColor(PRESET_COLORS[position]);
+                bg.setCornerRadius(12);
+                bg.setStroke(2, Color.parseColor("#333333"));
+                colorView.setBackground(bg);
+                return colorView;
+            }
+        });
+        gridView.setPadding(16, 16, 16, 16);
+
+        builder.setView(gridView);
+        AlertDialog dialog = builder.create();
+
+        gridView.setOnItemClickListener((parent, view, position, id) -> {
+            int color = PRESET_COLORS[position];
+            target.setBackgroundColor(color);
+            SharedPreferences sp = getSharedPreferences("Cookie", Context.MODE_PRIVATE);
+            sp.edit().putInt(prefKey, color).commit();
+            sendBroadcast(new Intent("com.junruo.jiankong.ACTION_UPDATE_DISPLAY"));
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 
     private void OnClick() {
@@ -405,11 +556,24 @@ public class MainActivity extends AppCompatActivity {
                         editor.putString("kuan",binding.kuan.getText().toString());
                         editor.putString("xgao",binding.xgao.getText().toString());
                         editor.putString("xkuan",binding.xkuan.getText().toString());
+                        // 保存悬浮窗显示项目设置
+                        editor.putBoolean("show_mian", binding.cbMian.isChecked());
+                        editor.putBoolean("show_zong", binding.cbZong.isChecked());
+                        editor.putBoolean("show_yong", binding.cbYong.isChecked());
+                        editor.putBoolean("show_sheng", binding.cbSheng.isChecked());
+                        editor.putBoolean("show_ben", binding.cbBen.isChecked());
+                        editor.putBoolean("show_tiao", binding.cbTiao.isChecked());
                         editor.commit();
                         binding.xfc.setText("关闭悬浮窗");
+                        // 通知悬浮窗服务刷新显示设置
+                        sendBroadcast(new Intent("com.junruo.jiankong.ACTION_UPDATE_DISPLAY"));
 
                         Intent intent = new Intent(MainActivity.this, FloatingImageDisplayService.class);
-                        startService(intent);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            startForegroundService(intent);
+                        } else {
+                            startService(intent);
+                        }
 
 
                     }
@@ -513,10 +677,22 @@ public class MainActivity extends AppCompatActivity {
                             dings = 0.00;
 
                             try {
-                                // resources（套内流量）
+                                // 先尝试从 summary 取总免（旧接口兼容）
+                                JSONObject summary = json.getJSONObject("summary");
+                                if (summary != null) {
+                                    String freeFlow = summary.getString("freeFlow");
+                                    if (freeFlow != null && !freeFlow.isEmpty() && !freeFlow.equals("0") && !freeFlow.equals("0.00")) {
+                                        mianliu = Double.parseDouble(freeFlow);
+                                    }
+                                }
+
+                                // resources（套内流量，可能多张卡）
                                 JSONArray jsonArray = json.getJSONArray("resources");
-                                if (jsonArray != null && jsonArray.size() > 0) {
-                                    JSONObject job = jsonArray.getJSONObject(0);
+                                if (jsonArray != null) {
+                                    for (int j = 0; j < jsonArray.size(); j++) {
+                                    JSONObject job = jsonArray.getJSONObject(j);
+                                    String cardName = job.getString("packageName");
+                                    System.out.println("卡" + j + ": " + cardName);
                                     JSONArray details = job.getJSONArray("details");
                                     if (details != null) {
                                         for (int i = 0; i < details.size(); i++) {
@@ -539,6 +715,7 @@ public class MainActivity extends AppCompatActivity {
                                                     dingy = dingy + Double.parseDouble(use);
                                                     String remainDisplay = totalVal == 0 ? "不限" : safeStr(remain) + "M";
                                                     dings = totalVal == 0 ? dings : dings + safeDouble(remain);
+                                                    if (mianliu == 0.00) mianliu = mianliu + Double.parseDouble(use); // summary无值时，定向已用计入总免
                                                     dayin = dayin + "\n定向包：" + safeStr(feePolicyName) + " 总量：" + (totalVal == 0 ? "不限" : safeStr(total) + "M") + "，已用：" + use + "M，剩余：" + remainDisplay + "\n";
                                                 } else if ("0".equals(limited)) {
                                                     // 通用包
@@ -553,18 +730,20 @@ public class MainActivity extends AppCompatActivity {
                                             }
                                         }
                                     }
+                                    } // end for j (cards)
                                 }
 
                                 // MlResources（新版接口新增的免流明细）
+                                // 只在 summary.freeFlow 无值时累加，避免重复计算
                                 JSONArray mlArray = json.getJSONArray("MlResources");
-                                if (mlArray != null) {
+                                if (mlArray != null && mianliu == 0.00) {
                                     for (int i = 0; i < mlArray.size(); i++) {
                                         try {
                                             JSONObject mlRes = mlArray.getJSONObject(i);
                                             JSONArray mlDetails = mlRes.getJSONArray("details");
                                             if (mlDetails != null) {
-                                                for (int j = 0; j < mlDetails.size(); j++) {
-                                                    JSONObject ml = mlDetails.getJSONObject(j);
+                                                for (int k = 0; k < mlDetails.size(); k++) {
+                                                    JSONObject ml = mlDetails.getJSONObject(k);
                                                     String mlUse = ml.getString("use");
                                                     if (mlUse != null && !mlUse.equals("0.00")) {
                                                         mianliu = mianliu + Double.parseDouble(mlUse);
@@ -599,6 +778,9 @@ public class MainActivity extends AppCompatActivity {
                                 orone="no";
                                 SharedPreferences.Editor editor = share.edit();
                                 editor.putString("Cookie",cookie);
+                                editor.putFloat("onem", onem.floatValue());
+                                editor.putFloat("onet", onet.floatValue());
+                                editor.putLong("onem_time", System.currentTimeMillis());
                                 editor.commit();
                             }else {
                                 //toast("不是第一次");
