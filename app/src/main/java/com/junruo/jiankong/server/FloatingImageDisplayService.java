@@ -113,6 +113,7 @@ public class FloatingImageDisplayService extends Service {
     };
 
     private void applyDisplaySettings() {
+        if (miant == null || bentv == null) return; // 视图未初始化时跳过
         SharedPreferences sp = getSharedPreferences("Cookie", Context.MODE_PRIVATE);
         boolean showMian = sp.getBoolean("show_mian", true);
         boolean showZong = sp.getBoolean("show_zong", true);
@@ -367,7 +368,11 @@ public class FloatingImageDisplayService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        windowManager.removeView(displayView);
+        try {
+            windowManager.removeView(displayView);
+        } catch (Exception e) {
+            // view 可能未添加
+        }
         handler.removeCallbacksAndMessages(null);
         isStarted = false;
         unregisterReceiver(refreshReceiver);
@@ -408,7 +413,12 @@ public class FloatingImageDisplayService extends Service {
 
 
 
-            windowManager.addView(displayView, layoutParams);
+            try {
+                windowManager.addView(displayView, layoutParams);
+            } catch (Exception e) {
+                // view 已添加，更新即可
+                windowManager.updateViewLayout(displayView, layoutParams);
+            }
 
 
         }
