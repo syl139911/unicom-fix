@@ -88,6 +88,7 @@ public class FloatingImageDisplayService extends Service {
     TextView miantv,zongtv,yongtv,shengtv,bentv,tiaotv,sjtv,miant,zongt,yongt,shengt,sjt;
 
     private GestureDetector gestureDetector;
+    TextView btnRefresh, btnReset;
     private boolean isFolded = false;
 
     LinearLayout zhe;
@@ -257,6 +258,28 @@ public class FloatingImageDisplayService extends Service {
 
         zhe = displayView.findViewById(R.id.zhe);
 
+        // 刷新/重置按钮
+        btnRefresh = displayView.findViewById(R.id.btn_refresh);
+        btnReset = displayView.findViewById(R.id.btn_reset);
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener(v -> {
+                update();
+                Toast.makeText(getApplicationContext(), "已刷新", Toast.LENGTH_SHORT).show();
+            });
+        }
+        if (btnReset != null) {
+            btnReset.setOnClickListener(v -> {
+                mianliu = 0.00; zong = 0.00; yong = 0.00; sheng = 0.00;
+                dingz = 0.00; dingy = 0.00; dings = 0.00;
+                ben = 0.00; tiao = 0.00; onem = 0.00; onet = 0.00;
+                orone = "yes";
+                SharedPreferences sp = getSharedPreferences("Cookie", Context.MODE_PRIVATE);
+                sp.edit().remove("onem").remove("onet").remove("onem_time").commit();
+                update();
+                Toast.makeText(getApplicationContext(), "已重置", Toast.LENGTH_SHORT).show();
+            });
+        }
+
         // 双击折叠/展开
         gestureDetector = new GestureDetector(this, new SimpleOnGestureListener() {
             @Override
@@ -274,6 +297,8 @@ public class FloatingImageDisplayService extends Service {
                             inner.getChildAt(i).setVisibility(isFolded ? View.GONE : View.VISIBLE);
                         }
                     }
+                    // 折叠时时间标签改"更"，展开时恢复"时间"
+                    sjt.setText(isFolded ? "更 " : "时间 ");
                     layoutParams.height = isFolded ? Integer.parseInt(xgao) : Integer.parseInt(gao);
                     layoutParams.width = isFolded ? Integer.parseInt(xkuan) : Integer.parseInt(kuan);
                     windowManager.updateViewLayout(displayView, layoutParams);
