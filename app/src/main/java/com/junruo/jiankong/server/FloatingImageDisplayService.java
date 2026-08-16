@@ -299,6 +299,9 @@ public class FloatingImageDisplayService extends Service {
                     }
                     // 折叠时时间标签改"更"，展开时恢复"时间"
                     sjt.setText(isFolded ? "更 " : "时间 ");
+                    // 折叠时隐藏刷新/重置按钮
+                    if (btnRefresh != null) btnRefresh.setVisibility(isFolded ? View.GONE : View.VISIBLE);
+                    if (btnReset != null) btnReset.setVisibility(isFolded ? View.GONE : View.VISIBLE);
                     layoutParams.height = isFolded ? Integer.parseInt(xgao) : Integer.parseInt(gao);
                     layoutParams.width = isFolded ? Integer.parseInt(xkuan) : Integer.parseInt(kuan);
                     windowManager.updateViewLayout(displayView, layoutParams);
