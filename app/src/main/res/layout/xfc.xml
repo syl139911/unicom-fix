@@ -2,18 +2,10 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="70dp"
-    android:layout_height="130dp"
+    android:layout_height="110dp"
     android:orientation="vertical"
     android:background="@drawable/blackground"
     android:gravity="center">
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:layout_centerVertical="true"
-        android:src="@drawable/xfc_center"
-        android:contentDescription="拖动" />
-
     <LinearLayout
         android:id="@+id/zhe"
         android:layout_width="wrap_content"
@@ -178,37 +170,7 @@
                         android:textColor="#FFFFFF"/>
                 </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center">
 
-                    <TextView
-                        android:id="@+id/btn_refresh"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="刷新"
-                        android:textSize="8sp"
-                        android:textColor="#4FC3F7"
-                        android:paddingLeft="4dp"
-                        android:paddingRight="4dp"
-                        android:clickable="true"
-                        android:focusable="true" />
-
-                    <TextView
-                        android:id="@+id/btn_reset"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="重置"
-                        android:textSize="8sp"
-                        android:textColor="#FF8A65"
-                        android:paddingLeft="4dp"
-                        android:paddingRight="4dp"
-                        android:clickable="true"
-                        android:focusable="true" />
-
-                </LinearLayout>
 
             </LinearLayout>
 
