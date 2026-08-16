@@ -529,25 +529,22 @@ public class MainActivity extends AppCompatActivity {
 
                                                 if (use == null) continue;
 
-                                                if ("1".equals(limited) && "40008".equals(addupItemCode)) {
-                                                    mianliu = mianliu + Double.parseDouble(use);
-                                                    dayin = dayin + "\n免流包：" + safeStr(feePolicyName) + " 已使用：" + use + "M\n";
-                                                } else if ("0".equals(limited)) {
-                                                    String total = liuliang.getString("total");
-                                                    String remain = liuliang.getString("remain");
-                                                    if (total == null || remain == null) continue;
+                                                String total = liuliang.getString("total");
+                                                String remain = liuliang.getString("remain");
 
-                                                    if ("40008".equals(addupItemCode)) {
-                                                        dingz = dingz + Double.parseDouble(total);
-                                                        dingy = dingy + Double.parseDouble(use);
-                                                        dings = dings + Double.parseDouble(remain);
-                                                        dayin = dayin + "\n定向包：" + safeStr(feePolicyName) + " 总量：" + total + "M，已用：" + use + "M，剩余：" + remain + "M\n";
-                                                    } else {
-                                                        zong = zong + Double.parseDouble(total);
-                                                        yong = yong + Double.parseDouble(use);
-                                                        sheng = sheng + Double.parseDouble(remain);
-                                                        dayin = dayin + "\n通用包：" + safeStr(feePolicyName) + " 总量：" + total + "M，已用：" + use + "M，剩余：" + remain + "M\n";
-                                                    }
+                                                if ("40008".equals(addupItemCode)) {
+                                                    // 定向包（包括钉钉免流、联通云盘等）
+                                                    dingz = dingz + safeDouble(total);
+                                                    dingy = dingy + Double.parseDouble(use);
+                                                    dings = dings + safeDouble(remain);
+                                                    dayin = dayin + "\n定向包：" + safeStr(feePolicyName) + " 总量：" + safeStr(total) + "M，已用：" + use + "M，剩余：" + safeStr(remain) + "M\n";
+                                                } else if ("0".equals(limited)) {
+                                                    // 通用包
+                                                    if (total == null || remain == null) continue;
+                                                    zong = zong + Double.parseDouble(total);
+                                                    yong = yong + Double.parseDouble(use);
+                                                    sheng = sheng + Double.parseDouble(remain);
+                                                    dayin = dayin + "\n通用包：" + safeStr(feePolicyName) + " 总量：" + total + "M，已用：" + use + "M，剩余：" + remain + "M\n";
                                                 }
                                             } catch (Exception e) {
                                                 System.out.println("解析resources[" + i + "]异常: " + e.getMessage());
@@ -597,15 +594,11 @@ public class MainActivity extends AppCompatActivity {
                                                         String usLimited = ud.getString("limited");
                                                         if (usTotal == null || usUse == null || usRemain == null) continue;
 
-                                                        if ("0".equals(usLimited)) {
-                                                            dingz = dingz + Double.parseDouble(usTotal);
-                                                            dingy = dingy + Double.parseDouble(usUse);
-                                                            dings = dings + Double.parseDouble(usRemain);
-                                                            dayin = dayin + "\n专享包：" + safeStr(ud.getString("feePolicyName")) + " 总量：" + usTotal + "M，已用：" + usUse + "M，剩余：" + usRemain + "M\n";
-                                                        } else {
-                                                            mianliu = mianliu + Double.parseDouble(usUse);
-                                                            dayin = dayin + "\n专享免流：" + safeStr(ud.getString("feePolicyName")) + " 已用：" + usUse + "M\n";
-                                                        }
+                                                        // unshared 都归定向
+                                                        dingz = dingz + safeDouble(usTotal);
+                                                        dingy = dingy + safeDouble(usUse);
+                                                        dings = dings + safeDouble(usRemain);
+                                                        dayin = dayin + "\n专享包：" + safeStr(ud.getString("feePolicyName")) + " 总量：" + safeStr(usTotal) + "M，已用：" + safeStr(usUse) + "M，剩余：" + safeStr(usRemain) + "M\n";
                                                     }
                                                 }
                                             }
@@ -743,6 +736,12 @@ public class MainActivity extends AppCompatActivity {
     // 安全取字符串，null 返回空串
     static String safeStr(String s) {
         return s == null ? "" : s;
+    }
+
+    // 安全取double，null 返回0
+    static double safeDouble(String s) {
+        if (s == null) return 0.0;
+        try { return Double.parseDouble(s); } catch (Exception e) { return 0.0; }
     }
 
     //自定义吐司

@@ -427,22 +427,20 @@ public class FloatingImageDisplayService extends Service {
 
                                                 if (use == null) continue;
 
-                                                if ("1".equals(limited) && "40008".equals(addupItemCode)) {
-                                                    mianliu = mianliu + Double.parseDouble(use);
-                                                } else if ("0".equals(limited)) {
-                                                    String total = liuliang.getString("total");
-                                                    String remain = liuliang.getString("remain");
-                                                    if (total == null || remain == null) continue;
+                                                String total = liuliang.getString("total");
+                                                String remain = liuliang.getString("remain");
 
-                                                    if ("40008".equals(addupItemCode)) {
-                                                        dingz = dingz + Double.parseDouble(total);
-                                                        dingy = dingy + Double.parseDouble(use);
-                                                        dings = dings + Double.parseDouble(remain);
-                                                    } else {
-                                                        zong = zong + Double.parseDouble(total);
-                                                        yong = yong + Double.parseDouble(use);
-                                                        sheng = sheng + Double.parseDouble(remain);
-                                                    }
+                                                if ("40008".equals(addupItemCode)) {
+                                                    // 定向包（包括钉钉免流、联通云盘等）
+                                                    dingz = dingz + safeDouble(total);
+                                                    dingy = dingy + Double.parseDouble(use);
+                                                    dings = dings + safeDouble(remain);
+                                                } else if ("0".equals(limited)) {
+                                                    // 通用包
+                                                    if (total == null || remain == null) continue;
+                                                    zong = zong + Double.parseDouble(total);
+                                                    yong = yong + Double.parseDouble(use);
+                                                    sheng = sheng + Double.parseDouble(remain);
                                                 }
                                             } catch (Exception e) {
                                                 System.out.println("解析resources[" + i + "]异常: " + e.getMessage());
@@ -492,13 +490,10 @@ public class FloatingImageDisplayService extends Service {
                                                             String usLimited = ud.getString("limited");
                                                             if (usTotal == null || usUse == null || usRemain == null) continue;
 
-                                                            if ("0".equals(usLimited)) {
-                                                                dingz = dingz + Double.parseDouble(usTotal);
-                                                                dingy = dingy + Double.parseDouble(usUse);
-                                                                dings = dings + Double.parseDouble(usRemain);
-                                                            } else {
-                                                                mianliu = mianliu + Double.parseDouble(usUse);
-                                                            }
+                                                            // unshared 都归定向
+                                                            dingz = dingz + safeDouble(usTotal);
+                                                            dingy = dingy + safeDouble(usUse);
+                                                            dings = dings + safeDouble(usRemain);
                                                         } catch (Exception e) {
                                                             System.out.println("解析unshared detail异常: " + e.getMessage());
                                                         }
@@ -601,6 +596,12 @@ public class FloatingImageDisplayService extends Service {
 
 
 
+
+    // 安全取double，null 返回0
+    private static double safeDouble(String s) {
+        if (s == null) return 0.0;
+        try { return Double.parseDouble(s); } catch (Exception e) { return 0.0; }
+    }
 
     private class FloatingOnTouchListener implements View.OnTouchListener {
         private int x;
