@@ -33,8 +33,5 @@
                 <TextView android:textSize="9.0dip" android:textColor="#ffffffff" android:id="@+id/tiao" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="正在获取" />
             </LinearLayout>
         </LinearLayout>
-        <LinearLayout android:layout_gravity="center" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
-            <TextView android:textSize="10.0dip" android:textColor="#ffcbdbfc" android:id="@+id/btn_fold" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="折叠" />
-        </LinearLayout>
     </LinearLayout>
 </LinearLayout>
