@@ -238,15 +238,6 @@ public class FloatingImageDisplayService extends Service {
 
         LayoutInflater layoutInflater = LayoutInflater.from(this);
         displayView = layoutInflater.inflate(R.layout.xfc, null);
-        // 双击折叠/展开 + 全窗口拖动
-        gestureDetector = new GestureDetector(this, new SimpleOnGestureListener() {
-            @Override
-            public boolean onDoubleTap(MotionEvent e) {
-                isFolded = !isFolded;
-                zhe.setVisibility(isFolded ? View.GONE : View.VISIBLE);
-                return true;
-            }
-        });
         displayView.setOnTouchListener(new FloatingOnTouchListener());
 
         miant = displayView.findViewById(R.id.miant);
@@ -264,6 +255,18 @@ public class FloatingImageDisplayService extends Service {
         sjt = displayView.findViewById(R.id.sjt);
 
         zhe = displayView.findViewById(R.id.zhe);
+
+        // 双击折叠/展开
+        gestureDetector = new GestureDetector(this, new SimpleOnGestureListener() {
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                if (zhe != null) {
+                    isFolded = !isFolded;
+                    zhe.setVisibility(isFolded ? View.GONE : View.VISIBLE);
+                }
+                return true;
+            }
+        });
 
 
 
