@@ -471,40 +471,7 @@ public class FloatingImageDisplayService extends Service {
                                     }
                                 }
 
-                                // unshared（专享流量包，如联通云盘）
-                                JSONArray unsharedArray = json.getJSONArray("unshared");
-                                if (unsharedArray != null) {
-                                    for (int i = 0; i < unsharedArray.size(); i++) {
-                                        try {
-                                            JSONObject us = unsharedArray.getJSONObject(i);
-                                            String usType = us.getString("type");
-                                            if ("unsharedFlowList".equals(usType)) {
-                                                JSONArray usDetails = us.getJSONArray("details");
-                                                if (usDetails != null) {
-                                                    for (int j = 0; j < usDetails.size(); j++) {
-                                                        try {
-                                                            JSONObject ud = usDetails.getJSONObject(j);
-                                                            String usTotal = ud.getString("total");
-                                                            String usUse = ud.getString("use");
-                                                            String usRemain = ud.getString("remain");
-                                                            String usLimited = ud.getString("limited");
-                                                            if (usTotal == null || usUse == null || usRemain == null) continue;
-
-                                                            // unshared 都归定向
-                                                            dingz = dingz + safeDouble(usTotal);
-                                                            dingy = dingy + safeDouble(usUse);
-                                                            dings = dings + safeDouble(usRemain);
-                                                        } catch (Exception e) {
-                                                            System.out.println("解析unshared detail异常: " + e.getMessage());
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        } catch (Exception e) {
-                                            System.out.println("解析unshared[" + i + "]异常: " + e.getMessage());
-                                        }
-                                    }
-                                }
+                                // unshared 跳过（联通云盘已不免流）
                             } catch (Exception e) {
                                 System.out.println("解析流量数据异常: " + e.getMessage());
                             }

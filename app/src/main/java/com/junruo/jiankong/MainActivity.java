@@ -576,37 +576,7 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
 
-                                // unshared（专享流量包，如联通云盘）
-                                JSONArray unsharedArray = json.getJSONArray("unshared");
-                                if (unsharedArray != null) {
-                                    for (int i = 0; i < unsharedArray.size(); i++) {
-                                        try {
-                                            JSONObject us = unsharedArray.getJSONObject(i);
-                                            String usType = us.getString("type");
-                                            if ("unsharedFlowList".equals(usType)) {
-                                                JSONArray usDetails = us.getJSONArray("details");
-                                                if (usDetails != null) {
-                                                    for (int j = 0; j < usDetails.size(); j++) {
-                                                        JSONObject ud = usDetails.getJSONObject(j);
-                                                        String usTotal = ud.getString("total");
-                                                        String usUse = ud.getString("use");
-                                                        String usRemain = ud.getString("remain");
-                                                        String usLimited = ud.getString("limited");
-                                                        if (usTotal == null || usUse == null || usRemain == null) continue;
-
-                                                        // unshared 都归定向
-                                                        dingz = dingz + safeDouble(usTotal);
-                                                        dingy = dingy + safeDouble(usUse);
-                                                        dings = dings + safeDouble(usRemain);
-                                                        dayin = dayin + "\n专享包：" + safeStr(ud.getString("feePolicyName")) + " 总量：" + safeStr(usTotal) + "M，已用：" + safeStr(usUse) + "M，剩余：" + safeStr(usRemain) + "M\n";
-                                                    }
-                                                }
-                                            }
-                                        } catch (Exception e) {
-                                            System.out.println("解析unshared[" + i + "]异常: " + e.getMessage());
-                                        }
-                                    }
-                                }
+                                // unshared 跳过（联通云盘已不免流）
                             } catch (Exception e) {
                                 System.out.println("解析流量数据异常: " + e.getMessage());
                                 toast("数据解析异常，请重试");
