@@ -689,8 +689,9 @@ public class MainActivity extends AppCompatActivity {
                                     for (int j = 0; j < jsonArray.size(); j++) {
                                     JSONObject job = jsonArray.getJSONObject(j);
                                     String cardType = job.getString("type");
-                                    // 只处理流量卡，跳过语音卡、短信卡
-                                    if (cardType != null && !cardType.equals("flow")) continue;
+                                    // 只处理第一张流量卡，跳过语音卡、短信卡和其他流量卡
+                                    if (cardType == null || !cardType.equals("flow")) continue;
+                                    if (j > 0) break; // 只处理第一张流量卡
                                     String cardName = job.getString("packageName");
                                     System.out.println("卡" + j + ": " + cardName + " type=" + cardType);
                                     JSONArray details = job.getJSONArray("details");
