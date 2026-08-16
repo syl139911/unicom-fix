@@ -731,7 +731,7 @@ public class MainActivity extends AppCompatActivity {
                                 // MlResources（新版接口新增的免流明细）
                                 // 只在 summary.freeFlow 无值时累加，避免重复计算
                                 JSONArray mlArray = json.getJSONArray("MlResources");
-                                if (mlArray != null) {
+                                if (mlArray != null && mianliu == 0.00) {  // 只在无值时累加，避免重复
                                     for (int i = 0; i < mlArray.size(); i++) {
                                         try {
                                             JSONObject mlRes = mlArray.getJSONObject(i);
