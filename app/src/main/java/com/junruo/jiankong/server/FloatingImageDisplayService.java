@@ -247,6 +247,15 @@ public class FloatingImageDisplayService extends Service {
                 return true;
             }
         });
+        // 折叠按钮点击
+        TextView btnFold = displayView.findViewById(R.id.btn_fold);
+        if (btnFold != null) {
+            btnFold.setOnClickListener(v -> {
+                isFolded = !isFolded;
+                zhe.setVisibility(isFolded ? View.GONE : View.VISIBLE);
+                btnFold.setText(isFolded ? "展开" : "折叠");
+            });
+        }
         displayView.setOnTouchListener(new FloatingOnTouchListener());
 
         miant = displayView.findViewById(R.id.miant);
