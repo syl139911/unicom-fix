@@ -708,7 +708,7 @@ public class MainActivity extends AppCompatActivity {
                                                     dingy = dingy + Double.parseDouble(use);
                                                     String remainDisplay = totalVal == 0 ? "不限" : safeStr(remain) + "M";
                                                     dings = totalVal == 0 ? dings : dings + safeDouble(remain);
-                                                    // 总免从 MlResources 累加，定向包不计入
+                                                    mianliu = mianliu + Double.parseDouble(use); // 定向已用计入总免
                                                     dayin = dayin + "\n定向包：" + safeStr(feePolicyName) + " 总量：" + (totalVal == 0 ? "不限" : safeStr(total) + "M") + "，已用：" + use + "M，剩余：" + remainDisplay + "\n";
                                                 } else if ("0".equals(limited)) {
                                                     // 通用包（只算流量，排除语音和短信）
