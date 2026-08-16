@@ -263,10 +263,16 @@ public class FloatingImageDisplayService extends Service {
             public boolean onDoubleTap(MotionEvent e) {
                 if (zhe != null) {
                     isFolded = !isFolded;
-                    // zhe 的第一个子 view 是内层容器，遍历它的子 view
+                    // zhe 的第一个子 view 是内层容器
+                    // 0=时间 1=总免 2=通用 3=已用 4=剩余 5=免 6=跳
+                    // 折叠时只显示 时间、免、跳
                     LinearLayout inner = (LinearLayout) ((LinearLayout)zhe).getChildAt(0);
-                    for (int i = 1; i < inner.getChildCount(); i++) {
-                        inner.getChildAt(i).setVisibility(isFolded ? View.GONE : View.VISIBLE);
+                    for (int i = 0; i < inner.getChildCount(); i++) {
+                        if (i == 0 || i == 5 || i == 6) {
+                            inner.getChildAt(i).setVisibility(View.VISIBLE); // 时间、免、跳始终显示
+                        } else {
+                            inner.getChildAt(i).setVisibility(isFolded ? View.GONE : View.VISIBLE);
+                        }
                     }
                     layoutParams.height = isFolded ? Integer.parseInt(xgao) : Integer.parseInt(gao);
                     layoutParams.width = isFolded ? Integer.parseInt(xkuan) : Integer.parseInt(kuan);
