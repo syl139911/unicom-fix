@@ -677,14 +677,7 @@ public class MainActivity extends AppCompatActivity {
                             dings = 0.00;
 
                             try {
-                                // 先尝试从 summary 取总免（旧接口兼容）
-                                JSONObject summary = json.getJSONObject("summary");
-                                if (summary != null) {
-                                    String freeFlow = summary.getString("freeFlow");
-                                    if (freeFlow != null && !freeFlow.isEmpty() && !freeFlow.equals("0") && !freeFlow.equals("0.00")) {
-                                        mianliu = Double.parseDouble(freeFlow);
-                                    }
-                                }
+                                // 总免从 MlResources 累加（summary.freeFlow 已弃用）
 
                                 // resources（套内流量，可能多张卡）
                                 JSONArray jsonArray = json.getJSONArray("resources");
@@ -715,7 +708,7 @@ public class MainActivity extends AppCompatActivity {
                                                     dingy = dingy + Double.parseDouble(use);
                                                     String remainDisplay = totalVal == 0 ? "不限" : safeStr(remain) + "M";
                                                     dings = totalVal == 0 ? dings : dings + safeDouble(remain);
-                                                    if (mianliu == 0.00) mianliu = mianliu + Double.parseDouble(use); // summary无值时，定向已用计入总免
+                                                    // 总免从 MlResources 累加，定向包不计入
                                                     dayin = dayin + "\n定向包：" + safeStr(feePolicyName) + " 总量：" + (totalVal == 0 ? "不限" : safeStr(total) + "M") + "，已用：" + use + "M，剩余：" + remainDisplay + "\n";
                                                 } else if ("0".equals(limited)) {
                                                     // 通用包
@@ -736,7 +729,7 @@ public class MainActivity extends AppCompatActivity {
                                 // MlResources（新版接口新增的免流明细）
                                 // 只在 summary.freeFlow 无值时累加，避免重复计算
                                 JSONArray mlArray = json.getJSONArray("MlResources");
-                                if (mlArray != null && mianliu == 0.00) {
+                                if (mlArray != null) {
                                     for (int i = 0; i < mlArray.size(); i++) {
                                         try {
                                             JSONObject mlRes = mlArray.getJSONObject(i);
@@ -786,7 +779,7 @@ public class MainActivity extends AppCompatActivity {
                                 //toast("不是第一次");
                             }
 
-                            ben = mianliu - onem;//本次免流
+                            ben = Math.max(0, mianliu - onem);//本次免流（防止负数）
                             if (ben >= 1024.00){//流量大于1024m将使用G来表示
                                 ben = ben / 1024.00;
 
@@ -795,7 +788,7 @@ public class MainActivity extends AppCompatActivity {
                                 binding.ben.setText(df.format(ben)+"M");
                             }
 
-                            tiao = yong - onet;//本次消耗
+                            tiao = Math.max(0, yong - onet);//本次消耗（防止负数）
                             if (tiao >= 1024.00){//流量大于1024m将使用G来表示
                                 tiao = tiao / 1024.00;
 
