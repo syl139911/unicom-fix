@@ -10,8 +10,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Handler;
@@ -86,6 +89,84 @@ public class FloatingImageDisplayService extends Service {
     LinearLayout zhe;
 
     private String gao,kuan,xgao,xkuan;
+
+    // 网络恢复自动刷新
+    private BroadcastReceiver networkReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (isNetworkAvailable()) {
+                System.out.println("网络恢复，自动刷新");
+                update();
+            }
+        }
+    };
+
+    // 显示项目设置更新
+    private BroadcastReceiver displayReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            applyDisplaySettings();
+        }
+    };
+
+    private void applyDisplaySettings() {
+        SharedPreferences sp = getSharedPreferences("Cookie", Context.MODE_PRIVATE);
+        boolean showMian = sp.getBoolean("show_mian", true);
+        boolean showZong = sp.getBoolean("show_zong", true);
+        boolean showYong = sp.getBoolean("show_yong", true);
+        boolean showSheng = sp.getBoolean("show_sheng", true);
+        boolean showBen = sp.getBoolean("show_ben", true);
+        boolean showTiao = sp.getBoolean("show_tiao", true);
+
+        // 显示/隐藏
+        miant.setVisibility(showMian ? View.VISIBLE : View.GONE);
+        miantv.setVisibility(showMian ? View.VISIBLE : View.GONE);
+        zongt.setVisibility(showZong ? View.VISIBLE : View.GONE);
+        zongtv.setVisibility(showZong ? View.VISIBLE : View.GONE);
+        yongt.setVisibility(showYong ? View.VISIBLE : View.GONE);
+        yongtv.setVisibility(showYong ? View.VISIBLE : View.GONE);
+        shengt.setVisibility(showSheng ? View.VISIBLE : View.GONE);
+        shengtv.setVisibility(showSheng ? View.VISIBLE : View.GONE);
+        bentv.setVisibility(showBen ? View.VISIBLE : View.GONE);
+        tiaotv.setVisibility(showTiao ? View.VISIBLE : View.GONE);
+        LinearLayout benRow = (LinearLayout) bentv.getParent();
+        LinearLayout tiaoRow = (LinearLayout) tiaotv.getParent();
+        benRow.getChildAt(0).setVisibility(showBen ? View.VISIBLE : View.GONE);
+        tiaoRow.getChildAt(0).setVisibility(showTiao ? View.VISIBLE : View.GONE);
+
+        // 颜色
+        int labelColor = sp.getInt("color_label", Color.parseColor("#E6E6E6"));
+        int valueColor = sp.getInt("color_value", Color.WHITE);
+        int btnColor = sp.getInt("color_btn", Color.parseColor("#4FC3F7"));
+
+        miant.setTextColor(labelColor);
+        zongt.setTextColor(labelColor);
+        yongt.setTextColor(labelColor);
+        shengt.setTextColor(labelColor);
+        sjt.setTextColor(labelColor);
+        benRow.getChildAt(0).setTextColor(labelColor);
+        tiaoRow.getChildAt(0).setTextColor(labelColor);
+
+        miantv.setTextColor(valueColor);
+        zongtv.setTextColor(valueColor);
+        yongtv.setTextColor(valueColor);
+        shengtv.setTextColor(valueColor);
+        sjtv.setTextColor(valueColor);
+        bentv.setTextColor(valueColor);
+        tiaotv.setTextColor(valueColor);
+
+        btnRefresh.setTextColor(btnColor);
+        btnReset.setTextColor(btnColor);
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null) return false;
+        NetworkCapabilities nc = cm.getNetworkCapabilities(cm.getActiveNetwork());
+        return nc != null && (nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                || nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                || nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
+    }
 
     // 通知栏按钮的广播接收器
     private BroadcastReceiver refreshReceiver = new BroadcastReceiver() {
@@ -204,6 +285,18 @@ public class FloatingImageDisplayService extends Service {
         filter.addAction("com.junruo.jiankong.ACTION_RESET");
         registerReceiver(refreshReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
 
+        // 注册网络恢复广播
+        IntentFilter netFilter = new IntentFilter();
+        netFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkReceiver, netFilter, Context.RECEIVER_NOT_EXPORTED);
+
+        // 注册显示设置更新广播
+        IntentFilter displayFilter = new IntentFilter("com.junruo.jiankong.ACTION_UPDATE_DISPLAY");
+        registerReceiver(displayReceiver, displayFilter, Context.RECEIVER_NOT_EXPORTED);
+
+        // 应用已保存的显示设置
+        applyDisplaySettings();
+
     }
 
     @Nullable
@@ -243,10 +336,10 @@ public class FloatingImageDisplayService extends Service {
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
                 .setContentIntent(pendingIntent)
                 // 添加"刷新"和"重置"按钮
-                .addAction(R.mipmap.ic_launcher, "刷新",
+                .addAction(R.drawable.ic_refresh, "刷新",
                         PendingIntent.getBroadcast(this, 0,
                                 new Intent("com.junruo.jiankong.ACTION_REFRESH"), PendingIntent.FLAG_IMMUTABLE))
-                .addAction(R.mipmap.ic_launcher, "重置",
+                .addAction(R.drawable.ic_reset, "重置",
                         PendingIntent.getBroadcast(this, 1,
                                 new Intent("com.junruo.jiankong.ACTION_RESET"), PendingIntent.FLAG_IMMUTABLE))
                 .build();
@@ -288,6 +381,8 @@ public class FloatingImageDisplayService extends Service {
         handler.removeCallbacksAndMessages(null);
         isStarted = false;
         unregisterReceiver(refreshReceiver);
+        unregisterReceiver(networkReceiver);
+        unregisterReceiver(displayReceiver);
         stopForeground(true);// 停止前台服务--参数：表示是否移除之前的通知
         // Service被终止的同时也停止定时器继续运行
         Toast.makeText(getApplicationContext(), "已关闭悬浮窗", Toast.LENGTH_SHORT).show();
@@ -412,10 +507,22 @@ public class FloatingImageDisplayService extends Service {
                             dings = 0.00;
 
                             try {
-                                // resources（套内流量）
+                                // 先尝试从 summary 取总免（旧接口兼容）
+                                JSONObject summary = json.getJSONObject("summary");
+                                if (summary != null) {
+                                    String freeFlow = summary.getString("freeFlow");
+                                    if (freeFlow != null && !freeFlow.isEmpty() && !freeFlow.equals("0") && !freeFlow.equals("0.00")) {
+                                        mianliu = Double.parseDouble(freeFlow);
+                                    }
+                                }
+
+                                // resources（套内流量，可能多张卡）
                                 JSONArray jsonArray = json.getJSONArray("resources");
-                                if (jsonArray != null && jsonArray.size() > 0) {
-                                    JSONObject job = jsonArray.getJSONObject(0);
+                                if (jsonArray != null) {
+                                    for (int j = 0; j < jsonArray.size(); j++) {
+                                    JSONObject job = jsonArray.getJSONObject(j);
+                                    String cardName = job.getString("packageName");
+                                    System.out.println("卡" + j + ": " + cardName);
                                     JSONArray details = job.getJSONArray("details");
                                     if (details != null) {
                                         for (int i = 0; i < details.size(); i++) {
@@ -436,6 +543,7 @@ public class FloatingImageDisplayService extends Service {
                                                     dingz = dingz + totalVal;
                                                     dingy = dingy + Double.parseDouble(use);
                                                     dings = totalVal == 0 ? dings : dings + safeDouble(remain);
+                                                    if (mianliu == 0.00) mianliu = mianliu + Double.parseDouble(use); // summary无值时，定向已用计入总免
                                                 } else if ("0".equals(limited)) {
                                                     // 通用包
                                                     if (total == null || remain == null) continue;
@@ -448,18 +556,20 @@ public class FloatingImageDisplayService extends Service {
                                             }
                                         }
                                     }
+                                    } // end for j (cards)
                                 }
 
                                 // MlResources（新版接口新增的免流明细）
+                                // 只在 summary.freeFlow 无值时累加，避免重复计算
                                 JSONArray mlArray = json.getJSONArray("MlResources");
-                                if (mlArray != null) {
+                                if (mlArray != null && mianliu == 0.00) {
                                     for (int i = 0; i < mlArray.size(); i++) {
                                         try {
                                             JSONObject mlRes = mlArray.getJSONObject(i);
                                             JSONArray mlDetails = mlRes.getJSONArray("details");
                                             if (mlDetails != null) {
-                                                for (int j = 0; j < mlDetails.size(); j++) {
-                                                    JSONObject ml = mlDetails.getJSONObject(j);
+                                                for (int k = 0; k < mlDetails.size(); k++) {
+                                                    JSONObject ml = mlDetails.getJSONObject(k);
                                                     String mlUse = ml.getString("use");
                                                     if (mlUse != null && !mlUse.equals("0.00")) {
                                                         mianliu = mianliu + Double.parseDouble(mlUse);
