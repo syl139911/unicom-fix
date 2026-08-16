@@ -711,7 +711,9 @@ public class MainActivity extends AppCompatActivity {
                                                     // 总免从 MlResources 累加，定向包不计入
                                                     dayin = dayin + "\n定向包：" + safeStr(feePolicyName) + " 总量：" + (totalVal == 0 ? "不限" : safeStr(total) + "M") + "，已用：" + use + "M，剩余：" + remainDisplay + "\n";
                                                 } else if ("0".equals(limited)) {
-                                                    // 通用包
+                                                    // 通用包（只算流量，排除语音和短信）
+                                                    String flowType = liuliang.getString("flowType");
+                                                    if (flowType == null || (!flowType.equals("1") && !flowType.equals("2"))) continue;
                                                     if (total == null || remain == null) continue;
                                                     zong = zong + Double.parseDouble(total);
                                                     yong = yong + Double.parseDouble(use);
