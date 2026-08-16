@@ -432,9 +432,10 @@ public class FloatingImageDisplayService extends Service {
 
                                                 if ("40008".equals(addupItemCode)) {
                                                     // 定向包（包括钉钉免流、联通云盘等）
-                                                    dingz = dingz + safeDouble(total);
+                                                    double totalVal = safeDouble(total);
+                                                    dingz = dingz + totalVal;
                                                     dingy = dingy + Double.parseDouble(use);
-                                                    dings = dings + safeDouble(remain);
+                                                    dings = totalVal == 0 ? dings : dings + safeDouble(remain);
                                                 } else if ("0".equals(limited)) {
                                                     // 通用包
                                                     if (total == null || remain == null) continue;
