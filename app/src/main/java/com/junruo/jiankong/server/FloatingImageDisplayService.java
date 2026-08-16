@@ -603,7 +603,7 @@ public class FloatingImageDisplayService extends Service {
                             }else {
                             }
                             String dayin = "";//打印到通知栏
-                            ben = mianliu - onem;//本次免流
+                            ben = Math.max(0, mianliu - onem);//本次免流（防止负数）
                             if (ben >= 1024.00){//流量大于1024m将使用G来表示
                                 ben = ben / 1024.00;
                                 bentv.setText(df.format(ben)+"G");
@@ -614,7 +614,7 @@ public class FloatingImageDisplayService extends Service {
 
                             }
 
-                            tiao = yong - onet;//本次消耗
+                            tiao = Math.max(0, yong - onet);//本次消耗（防止负数）
                             if (tiao >= 1024.00){//流量大于1024m将使用G来表示
                                 tiao = tiao / 1024.00;
                                 tiaotv.setText(df.format(tiao)+"G");
