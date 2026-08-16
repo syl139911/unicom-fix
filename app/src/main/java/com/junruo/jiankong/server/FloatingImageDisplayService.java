@@ -87,6 +87,8 @@ public class FloatingImageDisplayService extends Service {
 
     TextView miantv,zongtv,yongtv,shengtv,bentv,tiaotv,sjtv,miant,zongt,yongt,shengt,sjt;
     TextView btnRefresh, btnReset;
+    private GestureDetector gestureDetector;
+    private boolean isFolded = false;
 
     LinearLayout zhe;
 
