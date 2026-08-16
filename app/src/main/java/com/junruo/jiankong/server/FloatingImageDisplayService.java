@@ -81,7 +81,6 @@ public class FloatingImageDisplayService extends Service {
 
     private String cookie = "";//储存cookie信息
 
-    private Boolean isZhan = true;//悬浮窗展开状态
 
 
 
@@ -407,44 +406,7 @@ public class FloatingImageDisplayService extends Service {
             //handler.removeCallbacksAndMessages(null);
 
 
-            zhe.setOnClickListener(v -> {
-                if (isZhan){
-                    layoutParams.width = Integer.parseInt(xkuan);//200
-                    layoutParams.height = Integer.parseInt(xgao);//150
 
-
-                    sjt.setText("更：");
-                    miantv.setVisibility(8);
-                    zongtv.setVisibility(8);
-                    yongtv.setVisibility(8);
-                    shengtv.setVisibility(8);
-                    miant.setVisibility(8);
-                    zongt.setVisibility(8);
-                    yongt.setVisibility(8);
-                    shengt.setVisibility(8);
-                    isZhan = false;
-
-                    windowManager.updateViewLayout(displayView, layoutParams);
-
-                }else if (!isZhan){
-                    layoutParams.width = Integer.parseInt(kuan);//230
-                    layoutParams.height = Integer.parseInt(gao);//320
-                    sjt.setText("时间：");
-                    miantv.setVisibility(0);
-                    zongtv.setVisibility(0);
-                    yongtv.setVisibility(0);
-                    shengtv.setVisibility(0);
-                    miant.setVisibility(0);
-                    zongt.setVisibility(0);
-                    yongt.setVisibility(0);
-                    shengt.setVisibility(0);
-                    isZhan = true;
-
-                    windowManager.updateViewLayout(displayView, layoutParams);
-                }
-
-
-            });
 
             windowManager.addView(displayView, layoutParams);
 
