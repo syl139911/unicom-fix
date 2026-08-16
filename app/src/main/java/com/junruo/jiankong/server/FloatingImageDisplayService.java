@@ -202,7 +202,7 @@ public class FloatingImageDisplayService extends Service {
         IntentFilter filter = new IntentFilter();
         filter.addAction("com.junruo.jiankong.ACTION_REFRESH");
         filter.addAction("com.junruo.jiankong.ACTION_RESET");
-        registerReceiver(refreshReceiver, filter);
+        registerReceiver(refreshReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
 
     }
 
@@ -223,7 +223,7 @@ public class FloatingImageDisplayService extends Service {
         String ID = "com.junruo.jiankong";	//这里的id里面输入自己的项目的包的路径
         String NAME = "前台服务通知栏";
         Intent intent1 = new Intent(FloatingImageDisplayService.this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent1, 0);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent1, PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.Builder notification; //创建服务对象
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
