@@ -18,6 +18,7 @@ import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
@@ -385,7 +386,7 @@ public class FloatingImageDisplayService extends Service {
     }
 
     //1，首先创建一个Handler对象
-    Handler handler=new Handler();
+    Handler handler=new Handler(Looper.getMainLooper());
     @SuppressLint("WrongConstant")
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void showFloatingWindow() {
