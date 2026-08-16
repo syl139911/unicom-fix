@@ -131,8 +131,8 @@ public class FloatingImageDisplayService extends Service {
         tiaotv.setVisibility(showTiao ? View.VISIBLE : View.GONE);
         LinearLayout benRow = (LinearLayout) bentv.getParent();
         LinearLayout tiaoRow = (LinearLayout) tiaotv.getParent();
-        benRow.getChildAt(0).setVisibility(showBen ? View.VISIBLE : View.GONE);
-        tiaoRow.getChildAt(0).setVisibility(showTiao ? View.VISIBLE : View.GONE);
+        ((TextView)benRow.getChildAt(0)).setVisibility(showBen ? View.VISIBLE : View.GONE);
+        ((TextView)tiaoRow.getChildAt(0)).setVisibility(showTiao ? View.VISIBLE : View.GONE);
 
         // 颜色
         int labelColor = sp.getInt("color_label", Color.parseColor("#E6E6E6"));
@@ -144,8 +144,8 @@ public class FloatingImageDisplayService extends Service {
         yongt.setTextColor(labelColor);
         shengt.setTextColor(labelColor);
         sjt.setTextColor(labelColor);
-        benRow.getChildAt(0).setTextColor(labelColor);
-        tiaoRow.getChildAt(0).setTextColor(labelColor);
+        ((TextView)benRow.getChildAt(0)).setTextColor(labelColor);
+        ((TextView)tiaoRow.getChildAt(0)).setTextColor(labelColor);
 
         miantv.setTextColor(valueColor);
         zongtv.setTextColor(valueColor);
