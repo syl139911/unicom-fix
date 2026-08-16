@@ -864,6 +864,11 @@ public class MainActivity extends AppCompatActivity {
 
                             binding.dayin.setText(dayin);
 
+                            // 通知悬浮窗同步刷新
+                            if (FloatingImageDisplayService.isStarted) {
+                                sendBroadcast(new Intent("com.junruo.jiankong.ACTION_REFRESH"));
+                            }
+
                             toast("解析成功");
                             binding.stop.setText("刷新");
 
