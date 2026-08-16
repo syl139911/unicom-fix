@@ -574,6 +574,10 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             startService(intent);
                         }
+                        // 延迟1秒后触发悬浮窗数据加载
+                        new android.os.Handler().postDelayed(() -> {
+                            sendBroadcast(new Intent("com.junruo.jiankong.ACTION_REFRESH"));
+                        }, 1000);
 
 
                     }
