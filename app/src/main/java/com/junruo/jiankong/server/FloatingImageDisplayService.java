@@ -263,7 +263,13 @@ public class FloatingImageDisplayService extends Service {
             public boolean onDoubleTap(MotionEvent e) {
                 if (zhe != null) {
                     isFolded = !isFolded;
-                    zhe.setVisibility(isFolded ? View.GONE : View.VISIBLE);
+                    // 隐藏/显示数据行（保留时间行可点击）
+                    for (int i = 1; i < ((LinearLayout)zhe).getChildCount(); i++) {
+                        ((LinearLayout)zhe).getChildAt(i).setVisibility(isFolded ? View.GONE : View.VISIBLE);
+                    }
+                    layoutParams.height = isFolded ? Integer.parseInt(xgao) : Integer.parseInt(gao);
+                    layoutParams.width = isFolded ? Integer.parseInt(xkuan) : Integer.parseInt(kuan);
+                    windowManager.updateViewLayout(displayView, layoutParams);
                 }
                 return true;
             }
