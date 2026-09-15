@@ -95,13 +95,17 @@ public class FloatingImageDisplayService extends Service {
 
     private String gao,kuan,xgao,xkuan;
 
-    // 网络恢复自动刷新
+    // 网络恢复自动刷新（延迟3秒，等网络稳定）
     private BroadcastReceiver networkReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (isNetworkAvailable()) {
-                System.out.println("网络恢复，自动刷新");
-                update();
+                System.out.println("网络恢复，延迟3秒后刷新");
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    if (isNetworkAvailable()) {
+                        update();
+                    }
+                }, 3000);
             }
         }
     };
@@ -218,7 +222,11 @@ public class FloatingImageDisplayService extends Service {
         xgao = share.getString("xgao","152");
         xkuan = share.getString("xkuan","202");
 
-        time = Long.valueOf(share.getString("time","180"))*1000;
+        try {
+            time = Long.valueOf(share.getString("time","180"))*1000;
+        } catch (NumberFormatException e) {
+            time = 180000L;
+        }
         System.out.println("==========>高"+gao+"==========>宽"+kuan+"==========>小高"+xgao+"==========>小宽"+xkuan);
 
         isStarted = true;
@@ -232,8 +240,13 @@ public class FloatingImageDisplayService extends Service {
         layoutParams.format = PixelFormat.RGBA_8888;
         layoutParams.gravity = Gravity.LEFT | Gravity.TOP;
         layoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-        layoutParams.width = Integer.parseInt(kuan);//230
-        layoutParams.height = Integer.parseInt(gao);//320
+        try {
+            layoutParams.width = Integer.parseInt(kuan);
+            layoutParams.height = Integer.parseInt(gao);
+        } catch (NumberFormatException e) {
+            layoutParams.width = 230;
+            layoutParams.height = 320;
+        }
         layoutParams.x = 300;
         layoutParams.y = 300;
 
@@ -299,8 +312,13 @@ public class FloatingImageDisplayService extends Service {
                     }
                     // 折叠时时间标签改"更"，展开时恢复"时间"
                     sjt.setText(isFolded ? "更 " : "时间 ");
-                    layoutParams.height = isFolded ? Integer.parseInt(xgao) : Integer.parseInt(gao);
-                    layoutParams.width = isFolded ? Integer.parseInt(xkuan) : Integer.parseInt(kuan);
+                    try {
+                        layoutParams.height = isFolded ? Integer.parseInt(xgao) : Integer.parseInt(gao);
+                        layoutParams.width = isFolded ? Integer.parseInt(xkuan) : Integer.parseInt(kuan);
+                    } catch (NumberFormatException e) {
+                        layoutParams.height = isFolded ? 152 : 320;
+                        layoutParams.width = isFolded ? 202 : 230;
+                    }
                     windowManager.updateViewLayout(displayView, layoutParams);
                 }
                 return true;

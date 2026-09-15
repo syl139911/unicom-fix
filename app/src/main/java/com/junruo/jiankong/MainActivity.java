@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String cookie = "";//储存cookie信息
 
-    // 网络恢复自动刷新
+    // 网络恢复自动刷新（延迟3秒，等网络稳定）
     private BroadcastReceiver networkReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(android.content.Context context, Intent intent) {
@@ -86,7 +86,17 @@ public class MainActivity extends AppCompatActivity {
                         || nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
                         || nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))) {
                     if (cookie != null && !cookie.isEmpty()) {
-                        update();
+                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                            ConnectivityManager cm2 = (ConnectivityManager) getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
+                            if (cm2 != null) {
+                                NetworkCapabilities nc2 = cm2.getNetworkCapabilities(cm2.getActiveNetwork());
+                                if (nc2 != null && (nc2.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                                        || nc2.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                                        || nc2.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))) {
+                                    update();
+                                }
+                            }
+                        }, 3000);
                     }
                 }
             }
@@ -726,7 +736,7 @@ public class MainActivity extends AppCompatActivity {
                                                     zong = zong + Double.parseDouble(total);
                                                     yong = yong + Double.parseDouble(use);
                                                     sheng = sheng + Double.parseDouble(remain);
-                                                    dayin = dayin + "\n通用包：" + safeStr(feePolicyName) + " 总量：" + total + "M，已用：" + use + "M，剩余：" + remain + "M\n";
+                                                    dayin = dayin + "\n通用包：总量：" + total + "M，已用：" + use + "M，剩余：" + remain + "M\n";
                                                 }
                                             } catch (Exception e) {
                                                 System.out.println("解析resources[" + i + "]异常: " + e.getMessage());
