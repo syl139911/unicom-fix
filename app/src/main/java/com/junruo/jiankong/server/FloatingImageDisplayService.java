@@ -503,6 +503,10 @@ public class FloatingImageDisplayService extends Service {
                     .execute(new StringCallback() {
                         @Override
                         public void onSuccess(String s, Call call, Response response) {
+                            // 调试日志：打印原始返回
+                            System.out.println("[DEBUG] HTTP状态码: " + (response != null ? response.code() : "null"));
+                            System.out.println("[DEBUG] 响应长度: " + (s != null ? s.length() : 0));
+                            System.out.println("[DEBUG] 原始返回: " + (s != null ? s.substring(0, Math.min(s.length(), 500)) : "null"));
                             // 1. null检查放最前面
                             if (s == null || s.isEmpty() || s.equals("999999")){
                                 Toast.makeText(FloatingImageDisplayService.this,"解析cookie失败，请重新获取。",Toast.LENGTH_LONG).show();
@@ -510,6 +514,7 @@ public class FloatingImageDisplayService extends Service {
                             }
                             // 2. HTML检测
                             if (!s.trim().startsWith("{")) {
+                                System.out.println("[DEBUG] 返回不是JSON，是HTML: " + s.substring(0, Math.min(s.length(), 200)));
                                 return;
                             }
                             JSONObject json = JSONObject.parseObject(s);
@@ -518,6 +523,22 @@ public class FloatingImageDisplayService extends Service {
                             //binding.packageName.setText(json.get("packageName").toString());
 
                             // 3. 解析全部流量数据
+                            // 解析前打印关键字段
+                            System.out.println("[DEBUG] packageName: " + json.getString("packageName"));
+                            JSONArray debugResources = json.getJSONArray("resources");
+                            if (debugResources != null) {
+                                for (int d = 0; d < debugResources.size(); d++) {
+                                    JSONObject dJob = debugResources.getJSONObject(d);
+                                    System.out.println("[DEBUG] resources[" + d + "] type=" + dJob.getString("type") + " name=" + dJob.getString("packageName"));
+                                    JSONArray dDetails = dJob.getJSONArray("details");
+                                    if (dDetails != null) {
+                                        for (int dd = 0; dd < dDetails.size(); dd++) {
+                                            JSONObject dDetail = dDetails.getJSONObject(dd);
+                                            System.out.println("[DEBUG]   detail[" + dd + "] use=" + dDetail.getString("use") + " total=" + dDetail.getString("total") + " remain=" + dDetail.getString("remain") + " limited=" + dDetail.getString("limited") + " addupItemCode=" + dDetail.getString("addupItemCode"));
+                                        }
+                                    }
+                                }
+                            }
                             mianliu = 0.00;
                             yong = 0.00;
                             zong = 0.00;
@@ -621,6 +642,9 @@ public class FloatingImageDisplayService extends Service {
                                 editor.commit();
                             }else {
                             }
+                            // 解析后打印最终值
+                            System.out.println("[DEBUG] 解析结果: mianliu=" + mianliu + " yong=" + yong + " zong=" + zong + " sheng=" + sheng);
+                            System.out.println("[DEBUG] 本次: onem=" + onem + " onet=" + onet + " ben=" + (mianliu - onem) + " tiao=" + (yong - onet));
                             String dayin = "";//打印到通知栏
                             ben = Math.max(0, mianliu - onem);//本次免流（防止负数）
                             if (ben >= 1024.00){//流量大于1024m将使用G来表示
