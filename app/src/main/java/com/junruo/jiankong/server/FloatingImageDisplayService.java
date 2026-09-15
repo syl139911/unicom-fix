@@ -334,7 +334,7 @@ public class FloatingImageDisplayService extends Service {
                     try {
                         layoutParams.height = isFolded ? Integer.parseInt(xgao) : Integer.parseInt(gao);
                         layoutParams.width = isFolded ? Integer.parseInt(xkuan) : Integer.parseInt(kuan);
-                    } catch (NumberFormatException e) {
+                    } catch (NumberFormatException ex) {
                         layoutParams.height = isFolded ? 152 : 320;
                         layoutParams.width = isFolded ? 202 : 230;
                     }
