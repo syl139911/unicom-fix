@@ -106,7 +106,7 @@ public class FloatingImageDisplayService extends Service {
                 logFile = new java.io.File(getExternalFilesDir(null), "unicom_log.txt");
             }
             // 超过500KB清空重写
-            if (logFile.exists() && logFile.length() > 500 * 1024) {
+            if (logFile.exists() && logFile.length() > 100 * 1024) {
                 java.io.FileWriter fw = new java.io.FileWriter(logFile, false);
                 fw.write("=== 日志已清空 ===\n");
                 fw.flush();
