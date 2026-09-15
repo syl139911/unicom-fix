@@ -124,7 +124,7 @@ public class FloatingImageDisplayService extends Service {
                     if (isNetworkAvailable()) {
                         update();
                     }
-                }, 3000);
+                }, 10000);
             }
         }
     };
