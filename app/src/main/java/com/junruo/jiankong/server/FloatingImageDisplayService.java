@@ -523,9 +523,9 @@ public class FloatingImageDisplayService extends Service {
                         @Override
                         public void onSuccess(String s, Call call, Response response) {
                             // 调试日志：打印原始返回
-                            logToFile("DEBUG" HTTP状态码: " + (response != null ? response.code() : "null"));
-                            logToFile("DEBUG" 响应长度: " + (s != null ? s.length() : 0));
-                            logToFile("DEBUG" 原始返回: " + (s != null ? s.substring(0, Math.min(s.length(), 500)) : "null"));
+                            logToFile("DEBUG", "HTTP状态码: " + (response != null ? response.code() : "null"));
+                            logToFile("DEBUG", "响应长度: " + (s != null ? s.length() : 0));
+                            logToFile("DEBUG", "原始返回: " + (s != null ? s.substring(0, Math.min(s.length(), 500)) : "null"));
                             // 1. null检查放最前面
                             if (s == null || s.isEmpty() || s.equals("999999")){
                                 Toast.makeText(FloatingImageDisplayService.this,"解析cookie失败，请重新获取。",Toast.LENGTH_LONG).show();
@@ -533,7 +533,7 @@ public class FloatingImageDisplayService extends Service {
                             }
                             // 2. HTML检测
                             if (!s.trim().startsWith("{")) {
-                                logToFile("DEBUG" 返回不是JSON，是HTML: " + s.substring(0, Math.min(s.length(), 200)));
+                                logToFile("DEBUG", "返回不是JSON，是HTML: " + s.substring(0, Math.min(s.length(), 200)));
                                 return;
                             }
                             JSONObject json = JSONObject.parseObject(s);
@@ -543,17 +543,17 @@ public class FloatingImageDisplayService extends Service {
 
                             // 3. 解析全部流量数据
                             // 解析前打印关键字段
-                            logToFile("DEBUG" packageName: " + json.getString("packageName"));
+                            logToFile("DEBUG", "packageName: " + json.getString("packageName"));
                             JSONArray debugResources = json.getJSONArray("resources");
                             if (debugResources != null) {
                                 for (int d = 0; d < debugResources.size(); d++) {
                                     JSONObject dJob = debugResources.getJSONObject(d);
-                                    logToFile("DEBUG" resources[" + d + "] type=" + dJob.getString("type") + " name=" + dJob.getString("packageName"));
+                                    logToFile("DEBUG", "resources[" + d + "] type=" + dJob.getString("type") + " name=" + dJob.getString("packageName"));
                                     JSONArray dDetails = dJob.getJSONArray("details");
                                     if (dDetails != null) {
                                         for (int dd = 0; dd < dDetails.size(); dd++) {
                                             JSONObject dDetail = dDetails.getJSONObject(dd);
-                                            logToFile("DEBUG"   detail[" + dd + "] use=" + dDetail.getString("use") + " total=" + dDetail.getString("total") + " remain=" + dDetail.getString("remain") + " limited=" + dDetail.getString("limited") + " addupItemCode=" + dDetail.getString("addupItemCode"));
+                                            logToFile("DEBUG", "  detail[" + dd + "] use=" + dDetail.getString("use") + " total=" + dDetail.getString("total") + " remain=" + dDetail.getString("remain") + " limited=" + dDetail.getString("limited") + " addupItemCode=" + dDetail.getString("addupItemCode"));
                                         }
                                     }
                                 }
@@ -662,8 +662,8 @@ public class FloatingImageDisplayService extends Service {
                             }else {
                             }
                             // 解析后打印最终值
-                            logToFile("DEBUG" 解析结果: mianliu=" + mianliu + " yong=" + yong + " zong=" + zong + " sheng=" + sheng);
-                            logToFile("DEBUG" 本次: onem=" + onem + " onet=" + onet + " ben=" + (mianliu - onem) + " tiao=" + (yong - onet));
+                            logToFile("DEBUG", "解析结果: mianliu=" + mianliu + " yong=" + yong + " zong=" + zong + " sheng=" + sheng);
+                            logToFile("DEBUG", "本次: onem=" + onem + " onet=" + onet + " ben=" + (mianliu - onem) + " tiao=" + (yong - onet));
                             String dayin = "";//打印到通知栏
                             ben = Math.max(0, mianliu - onem);//本次免流（防止负数）
                             if (ben >= 1024.00){//流量大于1024m将使用G来表示
