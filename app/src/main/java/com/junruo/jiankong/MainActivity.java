@@ -74,6 +74,25 @@ public class MainActivity extends AppCompatActivity {
     private String time ;
 
     private String cookie = "";//储存cookie信息
+    private java.io.File logFile;
+
+    // 写日志到文件
+    private void logToFile(String tag, String msg) {
+        try {
+            String time = new java.text.SimpleDateFormat("MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date());
+            String line = time + " [" + tag + "] " + msg + "\n";
+            System.out.println("[" + tag + "] " + msg);
+            if (logFile == null) {
+                logFile = new java.io.File(getExternalFilesDir(null), "unicom_log.txt");
+            }
+            java.io.FileWriter fw = new java.io.FileWriter(logFile, true);
+            fw.write(line);
+            fw.flush();
+            fw.close();
+        } catch (Exception e) {
+            System.out.println("日志写入失败: " + e.getMessage());
+        }
+    }
 
     // 网络恢复自动刷新（延迟3秒，等网络稳定）
     private BroadcastReceiver networkReceiver = new BroadcastReceiver() {
@@ -656,6 +675,9 @@ public class MainActivity extends AppCompatActivity {
                         @SuppressLint("LongLogTag")
                         @Override
                         public void onSuccess(String s, Call call, Response response) {
+                            // 调试日志
+                            logToFile("DEBUG", "HTTP状态码: " + (response != null ? response.code() : "null"));
+                            logToFile("DEBUG", "原始返回: " + (s != null ? s.substring(0, Math.min(s.length(), 500)) : "null"));
                             System.out.println(s);
                             // 1. null检查放最前面
                             if (s == null || s.isEmpty() || s.equals("999999")){
