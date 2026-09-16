@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // 网络恢复自动刷新（延迟3秒，等网络稳定）
+    // 网络恢复自动刷新（延迟等网络稳定）
     private BroadcastReceiver networkReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(android.content.Context context, Intent intent) {
@@ -105,6 +105,10 @@ public class MainActivity extends AppCompatActivity {
                         || nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
                         || nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))) {
                     if (cookie != null && !cookie.isEmpty()) {
+                        // 读取用户设置的延迟
+                        SharedPreferences sp = getSharedPreferences("Cookie", Context.MODE_PRIVATE);
+                        long delayMs = 10000;
+                        try { delayMs = Long.valueOf(sp.getString("netDelay","10"))*1000; } catch (NumberFormatException e) {}
                         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                             ConnectivityManager cm2 = (ConnectivityManager) getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
                             if (cm2 != null) {
@@ -115,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                                     update();
                                 }
                             }
-                        }, 10000);
+                        }, delayMs);
                     }
                 }
             }
@@ -275,6 +279,11 @@ public class MainActivity extends AppCompatActivity {
         binding.gao.setText(gao);
         binding.xkuan.setText(xkuan);
         binding.xgao.setText(xgao);
+        // 加载网络恢复延迟
+        String netDelay = share.getString("netDelay", "");
+        if (!netDelay.isEmpty()) {
+            binding.netDelay.setText(netDelay);
+        }
 
         // 加载悬浮窗显示项目设置（默认全显示）
         binding.cbMian.setChecked(share.getBoolean("show_mian", true));
@@ -592,6 +601,9 @@ public class MainActivity extends AppCompatActivity {
                         editor.putBoolean("show_sheng", binding.cbSheng.isChecked());
                         editor.putBoolean("show_ben", binding.cbBen.isChecked());
                         editor.putBoolean("show_tiao", binding.cbTiao.isChecked());
+                        // 保存网络恢复延迟
+                        String netDelayStr = binding.netDelay.getText().toString().trim();
+                        editor.putString("netDelay", netDelayStr.isEmpty() ? "10" : netDelayStr);
                         editor.commit();
                         binding.xfc.setText("关闭悬浮窗");
                         // 通知悬浮窗服务刷新显示设置

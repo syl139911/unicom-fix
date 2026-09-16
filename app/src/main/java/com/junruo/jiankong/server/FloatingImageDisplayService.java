@@ -81,6 +81,7 @@ public class FloatingImageDisplayService extends Service {
     private Long time ;//默认3分钟刷新一次180000l
 
     private String cookie = "";//储存cookie信息
+    private long netDelayMs = 10000;//网络恢复延迟毫秒
 
 
 
@@ -131,7 +132,7 @@ public class FloatingImageDisplayService extends Service {
                     if (isNetworkAvailable()) {
                         update();
                     }
-                }, 10000);
+                }, netDelayMs);
             }
         }
     };
@@ -252,6 +253,11 @@ public class FloatingImageDisplayService extends Service {
             time = Long.valueOf(share.getString("time","180"))*1000;
         } catch (NumberFormatException e) {
             time = 180000L;
+        }
+        try {
+            netDelayMs = Long.valueOf(share.getString("netDelay","10"))*1000;
+        } catch (NumberFormatException e) {
+            netDelayMs = 10000L;
         }
         System.out.println("==========>高"+gao+"==========>宽"+kuan+"==========>小高"+xgao+"==========>小宽"+xkuan);
 

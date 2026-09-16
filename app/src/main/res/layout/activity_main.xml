@@ -657,6 +657,20 @@
                             android:textColor="#E1DCD3"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:text="网络恢复延迟(秒)："
+                            android:textSize="17sp"
+                            android:layout_marginTop="4dp"/>
+                        <EditText
+                            android:gravity="center"
+                            android:id="@+id/netDelay"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:hint="默认10秒"/>
+
+                        <TextView
+                            android:textColor="#E1DCD3"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
                             android:text="悬浮窗显示项目："
                             android:textSize="15sp"
                             android:layout_marginTop="8dp"/>
