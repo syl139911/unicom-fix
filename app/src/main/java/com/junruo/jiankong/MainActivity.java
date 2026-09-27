@@ -576,51 +576,51 @@ public class MainActivity extends AppCompatActivity {
                     binding.xfc.setText("关闭悬浮窗");
                     return;
                 }
-                if (!Settings.canDrawOverlays(this)) {
-                    Toast.makeText(this, "当前无权限，请授权", Toast.LENGTH_SHORT);
-                    startActivityForResult(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName())), 1);
-                } else {
-                    if (binding.shuaxin.getText().toString().equals("")){
-                        toast("请输入刷新时间后开启悬浮窗。");
-                    }else {
-                        // 创建SharedPreferences对象用于存储Cookie信息,并将其私有化
-                        SharedPreferences share = getSharedPreferences("Cookie",
-                                Context.MODE_PRIVATE);
-                        // 获取编辑器来存储数据到sharedpreferences中
-                        SharedPreferences.Editor editor = share.edit();
-                        editor.putString("time",binding.shuaxin.getText().toString());
-                        editor.putString("Cookie",binding.cookie.getText().toString());
-                        editor.putString("gao",binding.gao.getText().toString());
-                        editor.putString("kuan",binding.kuan.getText().toString());
-                        editor.putString("xgao",binding.xgao.getText().toString());
-                        editor.putString("xkuan",binding.xkuan.getText().toString());
-                        // 保存悬浮窗显示项目设置
-                        editor.putBoolean("show_mian", binding.cbMian.isChecked());
-                        editor.putBoolean("show_zong", binding.cbZong.isChecked());
-                        editor.putBoolean("show_yong", binding.cbYong.isChecked());
-                        editor.putBoolean("show_sheng", binding.cbSheng.isChecked());
-                        editor.putBoolean("show_ben", binding.cbBen.isChecked());
-                        editor.putBoolean("show_tiao", binding.cbTiao.isChecked());
-                        // 保存网络恢复延迟
-                        String netDelayStr = binding.netDelay.getText().toString().trim();
-                        editor.putString("netDelay", netDelayStr.isEmpty() ? "10" : netDelayStr);
-                        editor.commit();
-                        binding.xfc.setText("关闭悬浮窗");
-                        // 通知悬浮窗服务刷新显示设置
-                        sendBroadcast(new Intent("com.junruo.jiankong.ACTION_UPDATE_DISPLAY"));
+                if (binding.shuaxin.getText().toString().equals("")){
+                    toast("请输入刷新时间后开启悬浮窗。");
+                }else {
+                    // 创建SharedPreferences对象用于存储Cookie信息,并将其私有化
+                    SharedPreferences share = getSharedPreferences("Cookie",
+                            Context.MODE_PRIVATE);
+                    // 获取编辑器来存储数据到sharedpreferences中
+                    SharedPreferences.Editor editor = share.edit();
+                    editor.putString("time",binding.shuaxin.getText().toString());
+                    editor.putString("Cookie",binding.cookie.getText().toString());
+                    editor.putString("gao",binding.gao.getText().toString());
+                    editor.putString("kuan",binding.kuan.getText().toString());
+                    editor.putString("xgao",binding.xgao.getText().toString());
+                    editor.putString("xkuan",binding.xkuan.getText().toString());
+                    // 保存悬浮窗显示项目设置
+                    editor.putBoolean("show_mian", binding.cbMian.isChecked());
+                    editor.putBoolean("show_zong", binding.cbZong.isChecked());
+                    editor.putBoolean("show_yong", binding.cbYong.isChecked());
+                    editor.putBoolean("show_sheng", binding.cbSheng.isChecked());
+                    editor.putBoolean("show_ben", binding.cbBen.isChecked());
+                    editor.putBoolean("show_tiao", binding.cbTiao.isChecked());
+                    // 保存网络恢复延迟
+                    String netDelayStr = binding.netDelay.getText().toString().trim();
+                    editor.putString("netDelay", netDelayStr.isEmpty() ? "10" : netDelayStr);
+                    editor.commit();
+                    binding.xfc.setText("关闭悬浮窗");
+                    // 通知悬浮窗服务刷新显示设置
+                    sendBroadcast(new Intent("com.junruo.jiankong.ACTION_UPDATE_DISPLAY"));
 
-                        Intent intent = new Intent(MainActivity.this, FloatingImageDisplayService.class);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            startForegroundService(intent);
-                        } else {
-                            startService(intent);
-                        }
-                        // 延迟1秒后触发悬浮窗数据加载
-                        new android.os.Handler().postDelayed(() -> {
-                            sendBroadcast(new Intent("com.junruo.jiankong.ACTION_REFRESH"));
-                        }, 1000);
+                    // 无条件先启动服务：通知栏立刻出现，与悬浮窗权限无关
+                    Intent intent = new Intent(MainActivity.this, FloatingImageDisplayService.class);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(intent);
+                    } else {
+                        startService(intent);
+                    }
+                    // 延迟1秒后触发悬浮窗数据加载
+                    new android.os.Handler().postDelayed(() -> {
+                        sendBroadcast(new Intent("com.junruo.jiankong.ACTION_REFRESH"));
+                    }, 1000);
 
-
+                    // 悬浮窗权限只影响悬浮窗本身，无权限则提示并去授权
+                    if (!Settings.canDrawOverlays(this)) {
+                        Toast.makeText(this, "悬浮窗未授权，通知栏已开始刷新，悬浮窗需授权后显示", Toast.LENGTH_LONG).show();
+                        startActivityForResult(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName())), 1);
                     }
                 }
             }
@@ -644,9 +644,20 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
             if (!Settings.canDrawOverlays(this)) {
+                Toast.makeText(this, "未授权，仅通知栏刷新，悬浮窗不显示", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "授权成功", Toast.LENGTH_SHORT).show();
-                //startService(new Intent(MainActivity.this, FloatingImageDisplayService.class));
+                Toast.makeText(this, "授权成功，正在显示悬浮窗", Toast.LENGTH_SHORT).show();
+                // 服务可能已在运行，通知它补加悬浮窗
+                Intent update = new Intent("com.junruo.jiankong.ACTION_UPDATE_DISPLAY");
+                sendBroadcast(update);
+                if (!FloatingImageDisplayService.isStarted) {
+                    Intent intent = new Intent(MainActivity.this, FloatingImageDisplayService.class);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(intent);
+                    } else {
+                        startService(intent);
+                    }
+                }
             }
         }
     }

@@ -142,8 +142,25 @@ public class FloatingImageDisplayService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             applyDisplaySettings();
+            // 授权悬浮窗后，服务可能已在运行但悬浮窗未加，这里尝试补加
+            tryShowFloatingWindow();
         }
     };
+
+    private boolean floatingWindowAdded = false;
+
+    // 尝试显示悬浮窗，已添加则忽略
+    private void tryShowFloatingWindow() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
+            if (!floatingWindowAdded) {
+                try {
+                    windowManager.addView(displayView, layoutParams);
+                    floatingWindowAdded = true;
+                } catch (Exception ignored) {
+                }
+            }
+        }
+    }
 
     private void applyDisplaySettings() {
         if (miant == null || bentv == null) return; // 视图未初始化时跳过
@@ -466,6 +483,7 @@ public class FloatingImageDisplayService extends Service {
         }
         handler.removeCallbacksAndMessages(null);
         isStarted = false;
+        floatingWindowAdded = false;
         unregisterReceiver(refreshReceiver);
         unregisterReceiver(networkReceiver);
         unregisterReceiver(displayReceiver);
@@ -480,12 +498,14 @@ public class FloatingImageDisplayService extends Service {
     @SuppressLint("WrongConstant")
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void showFloatingWindow() {
-        if (Settings.canDrawOverlays(this)) {
+        if (Settings.canDrawOverlays(this) && !floatingWindowAdded) {
             try {
                 windowManager.addView(displayView, layoutParams);
+                floatingWindowAdded = true;
             } catch (Exception e) {
                 // view 已添加，更新即可
                 windowManager.updateViewLayout(displayView, layoutParams);
+                floatingWindowAdded = true;
             }
         }
     }
