@@ -451,7 +451,9 @@ public class FloatingImageDisplayService extends Service {
 
         startForeground();
 
-        showFloatingWindow();
+        update();  // 先刷新一次数据，更新通知栏
+        startUpdateTimer();  // 启动定时刷新，与悬浮窗权限无关
+        showFloatingWindow();  // 再尝试显示悬浮窗
         return super.onStartCommand(intent, flags, startId);
     }
     @Override
@@ -479,38 +481,30 @@ public class FloatingImageDisplayService extends Service {
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void showFloatingWindow() {
         if (Settings.canDrawOverlays(this)) {
-
-            update();
-            //2，然后创建一个Runnable对像
-            Runnable runnable=new Runnable(){
-                @Override
-                public void run() {
-                    update();
-                    windowManager.updateViewLayout(displayView, layoutParams);
-                    // TODO Auto-generated method stub
-                    //要做的事情，这里再次调用此Runnable对象，以实现每两秒实现一次的定时器操作
-                    handler.postDelayed(this, time);
-                }
-            };
-            //3，使用PostDelayed方法，调用此Runnable对象
-            handler.postDelayed(runnable, time);
-            //4，关闭此定时器，可以这样操作
-            //  handler.removeCallbacks(runnable);
-            //移除所有的消息
-            //handler.removeCallbacksAndMessages(null);
-
-
-
-
             try {
                 windowManager.addView(displayView, layoutParams);
             } catch (Exception e) {
                 // view 已添加，更新即可
                 windowManager.updateViewLayout(displayView, layoutParams);
             }
-
-
         }
+    }
+
+    // 启动定时刷新，不依赖悬浮窗权限
+    private void startUpdateTimer() {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                update();
+                try {
+                    windowManager.updateViewLayout(displayView, layoutParams);
+                } catch (Exception e) {
+                    // 悬浮窗未显示时忽略，不影响通知栏刷新
+                }
+                handler.postDelayed(this, time);
+            }
+        };
+        handler.postDelayed(runnable, time);
     }
 
     private void update(){
